@@ -122,7 +122,10 @@ class Bot:
 
             elif unit.type == UnitType.CART:
                 miner_pos = self.cart_is_next_to_miner(unit.position)
-                if unit.blitzium != 0:
+                if miner_died:
+                    if not miners[carts.index(unit.id)] == "rip":
+                        continue
+                elif unit.blitzium != 0:
                     if self.next_to_home(unit.position, base_position):
                         actions.append(UnitAction(UnitActionType.DROP,
                                                   unit.id,
