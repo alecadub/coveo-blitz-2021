@@ -144,13 +144,16 @@ class Bot:
             elif unit.type == UnitType.CART:
                 miner_pos = self.cart_is_next_to_miner(unit.position)
                 if miner_died:
-                    if miners[carts.index(unit.id)] == "rip":
-                        if game_message.map.depots:
-                            actions.append(UnitAction(UnitActionType.MOVE,
-                                                      unit.id,
-                                                      game_message.map.depots[0]))
-                        else:
-                            continue
+                    try:
+                        if miners[carts.index(unit.id)] == "rip":
+                            if game_message.map.depots:
+                                actions.append(UnitAction(UnitActionType.MOVE,
+                                                          unit.id,
+                                                          game_message.map.depots[0]))
+                            else:
+                                continue
+                    except:
+                        continue
                 elif unit.blitzium != 0:
                     if self.next_to_home(unit.position, base_position):
                         actions.append(UnitAction(UnitActionType.DROP,
@@ -170,9 +173,12 @@ class Bot:
                 elif miner_pos and self.check_if_miner_has_blitz(my_crew):
                     buddy = None
                     for temp in my_crew.units:
-                        if miners[carts.index(unit.id)] == temp.id:
-                            buddy = temp
-                            break
+                        try:
+                            if miners[carts.index(unit.id)] == temp.id:
+                                buddy = temp
+                                break
+                        except:
+                            continue
                     if buddy and self.is_next_to_position(buddy.position, unit.position):
                         actions.append(UnitAction(UnitActionType.PICKUP,
                                                   unit.id,
@@ -201,9 +207,12 @@ class Bot:
                     # miner_p = self.find_miner_position(my_crew, unit)
                     buddy = None
                     for temp in my_crew.units:
-                        if miners[carts.index(unit.id)] == temp.id:
-                            buddy = temp
-                            break
+                        try:
+                            if miners[carts.index(unit.id)] == temp.id:
+                                buddy = temp
+                                break
+                        except:
+                            continue
                     actions.append(UnitAction(UnitActionType.MOVE,
                                               unit.id,
                                               self.find_empty_positions(buddy.position, game_message, base_position)))
