@@ -79,6 +79,7 @@ class Bot:
                                               unit.id,
                                               miner_pos))
                 else:
+                    self.get_free_tile_around_mine(game_message, base_position)
                     actions.append(UnitAction(UnitActionType.MOVE,
                                               unit.id,
                                               available_spaces[miners.index(unit.id)]))
