@@ -191,14 +191,6 @@ class Bot:
                                                   self.get_random_position(game_message.map.get_map_size()),
                                                   game_message,
                                                   base_position, my_crew, unit)))
-                elif self.cart_in_error(unit.id, my_crew.errors) and unit.blitzium == 0:
-                    actions.append(UnitAction(UnitActionType.MOVE,
-                                              unit.id,
-                                              self.find_empty_positions(
-                                                  self.get_random_position(game_message.map.get_map_size()),
-                                                  game_message,
-                                                  base_position, my_crew, unit)))
-
                 elif extra_cart and not unit.id in carts:
                     depot_pos = self.next_to_a_depot(unit.position, game_message.map.depots)
                     if game_message.map.depots and unit.blitzium < 25 and depot_pos:
@@ -368,6 +360,13 @@ class Bot:
 
     def find_available(self, game_message: GameMessage, my_crew: Crew, unit: Unit):
         filtered = self.list_filter_remove_people_tiles(available_spaces, game_message)
+        for error in my_crew.errors:
+            if unit.id in error and unit.type == UnitType.MINER and 'No path to' in error:
+                try:
+                    nb = filtered[nminers * -1]
+                    return nb
+                except:
+                    return filtered[0]
         if filtered:
             return filtered[0]
         return False
