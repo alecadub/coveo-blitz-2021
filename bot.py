@@ -153,6 +153,11 @@ class Bot:
                         actions.append(UnitAction(UnitActionType.PICKUP,
                                                   unit.id,
                                                   buddy.position))
+                    else:
+                        actions.append(UnitAction(UnitActionType.MOVE,
+                                                  unit.id,
+                                                  self.find_empty_positions(buddy.position, game_message,
+                                                                            base_position)))
                 else:
                     # miner_p = self.find_miner_position(my_crew, unit)
                     buddy: Unit
@@ -173,7 +178,8 @@ class Bot:
                         actions.append(UnitAction(UnitActionType.ATTACK,
                                                   unit.id,
                                                   next_miner_pos))
-                    else:
+                    elif self.find_empty_positions(next_miner_pos, game_message,
+                                                   base_position):
                         actions.append(UnitAction(UnitActionType.MOVE,
                                                   unit.id,
                                                   self.find_empty_positions(next_miner_pos, game_message,
@@ -217,7 +223,7 @@ class Bot:
             return False
         temp = self.sorted_list_based_on_distance(base, list_of_options)
         if not self.list_filter_remove_people_tiles(temp, game_message):
-            return self.find_empty_positions(base, game_message, base)
+            return None
         return self.list_filter_remove_people_tiles(temp, game_message)[0]
 
     def is_next_to_mine(self, game_message: GameMessage, pos: Position):
