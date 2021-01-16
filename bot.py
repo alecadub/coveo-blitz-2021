@@ -30,8 +30,11 @@ class Bot:
             actions.append(BuyAction(UnitType.CART))
 
         # depot_position: Position = game_message.map.depots[0].position
+        # if not self.are_we_first_place(game_message, my_crew):
 
-        if my_crew.blitzium > my_crew.prices.OUTLAW and not self.has_outlaw(my_crew):
+        if not self.are_we_first_place(game_message,
+                                       my_crew) and my_crew.blitzium > my_crew.prices.OUTLAW and not self.has_outlaw(
+            my_crew):
             actions.append(BuyAction(UnitType.OUTLAW))
 
         for unit in my_crew.units:
@@ -69,11 +72,17 @@ class Bot:
                         actions.append(UnitAction(UnitActionType.MOVE,
                                                 unit.id,
                                                 self.find_empty_positions(miner_p, game_message, base_position)))
+                    miner_p = self.find_miner_position(my_crew)
+                    actions.append(UnitAction(UnitActionType.MOVE,
+                                              unit.id,
+                                              self.find_empty_positions(miner_p, game_message, base_position)))
 
             elif unit.type == UnitType.OUTLAW:
                 next_miner_pos = self.find_next_miner(game_message, my_crew)
                 if next_miner_pos:
-                    if self.is_next_to_position(unit.position, next_miner_pos) and my_crew.blitzium > 120:
+                    if self.is_next_to_position(unit.position,
+                                                next_miner_pos) and my_crew.blitzium > 120 and not self.are_we_first_place(
+                            game_message, my_crew):
                         actions.append(UnitAction(UnitActionType.ATTACK,
                                                   unit.id,
                                                   next_miner_pos))
@@ -90,9 +99,9 @@ class Bot:
     #     for i in range(1,count)
     #         Unit.find("MINER")
 
-    def find_miner_position(self, my_crew:Crew):
+    def find_miner_position(self, my_crew: Crew):
         for unit in my_crew.units:
-            if unit.type==UnitType.MINER:
+            if unit.type == UnitType.MINER:
                 return unit.position
         return []
 
@@ -193,11 +202,15 @@ class Bot:
         return closest_point
 
     def find_next_miner(self, game_message: GameMessage, my_crew: Crew):
+        highest_miner_position = None
+        highest_miner_blitzium = 0
         for crew in game_message.crews:
-            if crew.id != my_crew.id and crew.blitzium > my_crew.blitzium:
+            if crew.id != my_crew.id and crew.blitzium > highest_miner_blitzium:
                 for unit in crew.units:
                     if unit.type == UnitType.MINER:
-                        return unit.position
+                        highest_miner_position = unit.position
+                        highest_miner_blitzium = crew.blitzium
+        return highest_miner_position
 
     def are_we_first_place(self, game_message: GameMessage, my_crew: Crew):
         id_of_current_winner = None
@@ -235,5 +248,3 @@ class Bot:
             if unit.type == UnitType.MINER and unit.blitzium > 0:
                 return True
         return False
-
-    # def check_if_someone_on_tile(self, pos: Position):
