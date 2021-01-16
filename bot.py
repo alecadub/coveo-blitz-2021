@@ -64,7 +64,7 @@ class Bot:
 
                     actions.append(UnitAction(UnitActionType.MOVE,
                                               unit.id,
-                                              self.find_empty_positions(miner_positions[0], game_message)))
+                                              self.find_empty_positions(miner_positions[0], game_message, base_position)))
 
         return actions
 
@@ -75,6 +75,7 @@ class Bot:
             return True
         return []
 
+
     def cart_is_next_to_miner(self, curret_pos: Position):
         for miner in miner_positions:
             if miner == Position(curret_pos.x, curret_pos.y + 1) or miner == Position(curret_pos.x,
@@ -83,12 +84,17 @@ class Bot:
                 return miner
         return []
 
-    def find_empty_positions(self, pos: Position, game_message: GameMessage):
+
+    def find_empty_positions(self, pos: Position, game_message: GameMessage, base: Position):
         directions = [[0, 1], [1, 0], [-1, 0], [0, -1]]
+        list_of_options = []
         for x, y in directions:
             if game_message.map.tiles[pos.x + x][pos.y + y] == "EMPTY":
-                return Position(pos.x + x, pos.y + y)
-        return []
+                list_of_options.append(Position(pos.x + x, pos.y + y))
+        if not list_of_options:
+            return False
+        return self.find_closest_to_position(base, list_of_options)[0]
+
 
     def is_next_to_mine(self, game_message: GameMessage, pos: Position):
         directions = [[0, 1], [1, 0], [-1, 0], [0, -1]]
@@ -97,6 +103,7 @@ class Bot:
                 miner_positions.append(pos)
                 return Position(pos.x + x, pos.y + y)
         return []
+
 
     def get_mine_list(self, game_message: GameMessage, base: Position):
         global mine_list
@@ -107,11 +114,18 @@ class Bot:
                     if column == "MINE":
                         temp.append(Position(i, j))
         # sort by distance from base
-        for x in range(0, len(temp)):
-            closest_mine = self.find_closes_mine(base, temp)
-            mine_list.append(closest_mine)
-            temp.remove(closest_mine)
+        mine_list = self.find_closest_to_position(base, temp)
         return mine_list
+
+
+    def find_closest_to_position(self, pos: Position, random_list: List):
+        sorted_list = []
+        for x in range(0, len(random_list)):
+            closest_mine = self.find_closes_mine(pos, random_list)
+            sorted_list.append(closest_mine)
+            random_list.remove(closest_mine)
+        return sorted_list
+
 
     def get_mine_tiles(self, game_message: GameMessage):
         global available_spaces
@@ -122,6 +136,7 @@ class Bot:
                     available_spaces.append(Position(pos.x + x, pos.y + y))
         return available_spaces
 
+
     def distance(self, first: Position, second: Position):
         return math.sqrt(((first.x - second.x) ** 2) + ((first.y - second.y) ** 2))
 
@@ -131,5 +146,6 @@ class Bot:
         dist = 1000000000
         for mine in minelist:
             if self.distance(pos, mine) < dist:
-                closest_mine == mine
+                closest_mine = mine
+                dist = self.distance(pos, mine)
         return closest_mine
