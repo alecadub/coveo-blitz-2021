@@ -68,8 +68,8 @@ class Bot:
                                               miner_pos))
                 else:
 
-                        miner_p = self.find_miner_position(my_crew)
-                        actions.append(UnitAction(UnitActionType.MOVE,
+                    miner_p = self.find_miner_position(my_crew)
+                    actions.append(UnitAction(UnitActionType.MOVE,
                                                 unit.id,
                                                 self.find_empty_positions(miner_p, game_message, base_position)))
                     miner_p = self.find_miner_position(my_crew)
