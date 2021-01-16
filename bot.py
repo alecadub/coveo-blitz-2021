@@ -48,6 +48,15 @@ class Bot:
         my_crew: Crew = game_message.get_crews_by_id()[game_message.crewId]
         base_position = my_crew.homeBase
 
+        for unit in my_crew.units:
+            if unit.type == UnitType.OUTLAW:
+                potential_enemy = self.is_next_to_enemy_outlaw(game_message, my_crew, unit)
+                if potential_enemy:
+                    actions.append(UnitAction(UnitActionType.ATTACK,
+                                              unit.id,
+                                              potential_enemy))
+
+
         worth = self.is_worth(my_crew, game_message)
         if bought_last_round:
             if miner_died:
@@ -464,6 +473,18 @@ class Bot:
                         highest_miner_position = unit.position
                         highest_miner_blitzium = crew.blitzium
         return highest_miner_position
+
+    def is_next_to_enemy_outlaw(self, game_message: GameMessage, my_crew: Crew, my_outlaw: Unit):
+        for crew in game_message.crews:
+            if crew.id != my_crew.id:
+                for enemy in crew.units:
+                    if enemy.type == UnitType.OUTLAW:
+                        if Position(my_outlaw.position.x + 1, my_outlaw.position.y) == enemy.position\
+                            or Position(my_outlaw.position.x - 1, my_outlaw.position.y) == enemy.position\
+                            or Position(my_outlaw.position.x, my_outlaw.position.y + 1) == enemy.position\
+                            or Position(my_outlaw.position.x, my_outlaw.position.y - 1) == enemy.position:
+                                return enemy.position
+        return False
 
     def are_we_first_place(self, game_message: GameMessage, my_crew: Crew):
         id_of_current_winner = None
