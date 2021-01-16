@@ -1,5 +1,5 @@
 import math
-from random import random
+import random
 from typing import List
 from game_message import GameMessage, Position, Crew, UnitType, Unit
 from game_command import Action, UnitAction, UnitActionType, BuyAction
