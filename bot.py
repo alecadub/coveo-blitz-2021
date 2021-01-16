@@ -52,7 +52,7 @@ class Bot:
         for unit in my_crew.units:
             if unit.type == UnitType.OUTLAW:
                 potential_enemy = self.is_next_to_enemy_outlaw(game_message, my_crew, unit)
-                if potential_enemy:
+                if potential_enemy and my_crew.blitzium >= 50:
                     actions.append(UnitAction(UnitActionType.ATTACK,
                                               unit.id,
                                               potential_enemy))
