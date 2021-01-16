@@ -183,7 +183,7 @@ class Bot:
 
             elif unit.type == UnitType.CART:
 
-                if game_message.tick % 200 == 0:
+                if game_message.tick % 100 == 0:
 
                     actions.append(UnitAction(UnitActionType.MOVE,
                                               unit.id,
