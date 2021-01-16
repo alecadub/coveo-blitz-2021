@@ -18,6 +18,7 @@ cart_died = False
 extra_cart = False
 extra_extra_cart = False
 extra_extra_extra_cart = False
+had_trouble = False
 
 
 class Bot:
@@ -41,7 +42,7 @@ class Bot:
         global extra_cart
         global extra_extra_cart
         global extra_extra_extra_cart
-
+        global had_trouble
 
         actions: List[UnitAction] = []
 
@@ -79,10 +80,12 @@ class Bot:
             nminers += 1
             miners.append(my_crew.units[0].id)
         elif game_message.tick == 1:
-            actions.append(BuyAction(UnitType.CART))
-            ncarts += 1
+            if not len(my_crew.errors):
+                actions.append(BuyAction(UnitType.CART))
+                ncarts += 1
         elif game_message.tick == 2:
-            carts.append(my_crew.units[1].id)
+            if ncarts > 0:
+                carts.append(my_crew.units[1].id)
         elif worth:
             if nminers <= ncarts:
                 self.get_free_tile_around_mine(game_message, base_position)
@@ -96,6 +99,14 @@ class Bot:
                 actions.append(BuyAction(UnitType.CART))
                 ncarts += 1
                 bought_last_round = True
+
+        if had_trouble:
+            carts.append(my_crew.units[1].id)
+
+        if game_message.tick > 5:
+            if ncarts == 0:
+                had_trouble = True
+                actions.append(BuyAction(UnitType.CART))
 
         if game_message.tick > 5 and len(my_crew.units) < (noutlaws + nminers + ncarts) and not bought_last_round:
             if worth:
@@ -132,8 +143,6 @@ class Bot:
                                 cart_died = True
                                 actions.append(BuyAction(UnitType.CART))
 
-
-
         if 0 < len(game_message.map.depots) < 3 and not extra_cart:
             if my_crew.blitzium > my_crew.prices.CART and not bought_last_round:
                 actions.append(BuyAction(UnitType.CART))
@@ -161,7 +170,7 @@ class Bot:
                                               unit.id,
                                               miner_pos))
 
-                elif not self.find_available(game_message):
+                elif not self.find_available(game_message, my_crew, unit):
                     if noutlaws == 0:
                         actions.append(BuyAction(UnitType.OUTLAW))
                         noutlaws += 1
@@ -170,7 +179,7 @@ class Bot:
                     self.get_free_tile_around_mine(game_message, base_position)
                     actions.append(UnitAction(UnitActionType.MOVE,
                                               unit.id,
-                                              self.find_available(game_message)))
+                                              self.find_available(game_message, my_crew, unit)))
 
             elif unit.type == UnitType.CART:
 
@@ -197,7 +206,8 @@ class Bot:
                             for depot in game_message.map.depots:
                                 depot_positions.append(depot.position)
 
-                            sorted_depot_list_positions = self.sorted_list_based_on_distance(base_position, depot_positions)
+                            sorted_depot_list_positions = self.sorted_list_based_on_distance(base_position,
+                                                                                             depot_positions)
                             actions.append(UnitAction(UnitActionType.MOVE,
                                                       unit.id,
                                                       self.find_empty_positions(sorted_depot_list_positions[0],
@@ -313,7 +323,8 @@ class Bot:
                                     actions.append(UnitAction(UnitActionType.MOVE,
                                                               unit.id,
                                                               self.find_empty_positions(
-                                                                  self.get_random_position(game_message.map.get_map_size()),
+                                                                  self.get_random_position(
+                                                                      game_message.map.get_map_size()),
                                                                   game_message,
                                                                   base_position)))
 
@@ -346,8 +357,16 @@ class Bot:
                 return True
         return False
 
-    def find_available(self, game_message: GameMessage):
+    def find_available(self, game_message: GameMessage, my_crew: Crew, unit: Unit):
         filtered = self.list_filter_remove_people_tiles(available_spaces, game_message)
+
+        for error in my_crew.errors:
+            if unit.id in error and unit.type == UnitType.MINER and 'No path to' in error:
+                try:
+                    nb = filtered[nminers * -1]
+                    return nb
+                except:
+                    return filtered[0]
         if filtered:
             return filtered[0]
         return False
@@ -524,7 +543,7 @@ class Bot:
         return False
 
     def is_worth(self, my_crew: Crew, game_message: GameMessage):
-        if ((my_crew.prices.CART + my_crew.prices.MINER)*3 < 1000 - game_message.tick) or nminers < 4:
+        if ((my_crew.prices.CART + my_crew.prices.MINER) * 3 < 1000 - game_message.tick) or nminers < 4:
             return True
         else:
             return False
@@ -539,3 +558,7 @@ class Bot:
                 depot_position = depot.position
 
         return depot_position
+
+    def find_error(self, my_crew: Crew):
+        for error in my_crew.errors:
+            error_array = error.split()
