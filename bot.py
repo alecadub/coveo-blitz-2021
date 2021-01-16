@@ -142,11 +142,11 @@ class Bot:
                                 cart_died = True
                                 actions.append(BuyAction(UnitType.CART))
 
-        if 0 < len(game_message.map.depots) < 3 and not extra_cart:
+        if 1 < len(game_message.map.depots) < 4 and not extra_cart:
             if my_crew.blitzium > my_crew.prices.CART and not bought_last_round:
                 actions.append(BuyAction(UnitType.CART))
                 extra_cart = True
-        elif 3 <= len(game_message.map.depots) < 6 and not extra_extra_cart:
+        elif 4 <= len(game_message.map.depots) < 6 and not extra_extra_cart:
             if my_crew.blitzium > my_crew.prices.CART and not bought_last_round:
                 actions.append(BuyAction(UnitType.CART))
                 extra_extra_cart = True
@@ -181,128 +181,104 @@ class Bot:
                                               self.find_available(game_message, my_crew, unit)))
 
             elif unit.type == UnitType.CART:
-
-                if game_message.tick % 100 == 0:
-
+                interval = 100
+                if game_message.map.get_map_size() < 20:
+                    interval = 60
+                if game_message.tick % interval == 0:
                     actions.append(UnitAction(UnitActionType.MOVE,
                                               unit.id,
                                               self.find_empty_positions(
                                                   self.get_random_position(game_message.map.get_map_size()),
                                                   game_message,
                                                   base_position, my_crew, unit)))
+                elif self.cart_in_error(unit.id, my_crew.errors):
+                    actions.append(UnitAction(UnitActionType.MOVE,
+                                              unit.id,
+                                              self.find_empty_positions(
+                                                  self.get_random_position(game_message.map.get_map_size()),
+                                                  game_message,
+                                                  base_position, my_crew, unit)))
+
+                elif extra_cart and not unit.id in carts:
+                    depot_pos = self.next_to_a_depot(unit.position, game_message.map.depots)
+                    if game_message.map.depots and unit.blitzium < 25 and depot_pos:
+                        # we are next to a depot, pickup
+                        actions.append(UnitAction(UnitActionType.PICKUP,
+                                                  unit.id,
+                                                  depot_pos))
+                    elif game_message.map.depots and unit.blitzium < 25:
+                        #         go to depot
+                        depot_positions = []
+                        for depot in game_message.map.depots:
+                            depot_positions.append(depot.position)
+
+                        sorted_depot_list_positions = self.sorted_list_based_on_distance(base_position,
+                                                                                         depot_positions)
+                        actions.append(UnitAction(UnitActionType.MOVE,
+                                                  unit.id,
+                                                  self.find_empty_positions(sorted_depot_list_positions[0],
+                                                                            game_message, base_position, my_crew,
+                                                                            unit)))
+
+                    elif self.next_to_home(unit.position, base_position) and unit.blitzium > 0:
+                        actions.append(UnitAction(UnitActionType.DROP,
+                                                  unit.id,
+                                                  base_position))
+                    elif unit.blitzium == 25 or (unit.blitzium > 0 and not game_message.map.depots):
+                        actions.append(UnitAction(UnitActionType.MOVE,
+                                                  unit.id,
+                                                  self.find_empty_positions(base_position, game_message,
+                                                                            base_position, my_crew, unit)))
+                    else:
+                        actions.append(UnitAction(UnitActionType.MOVE,
+                                                  unit.id,
+                                                  self.find_empty_positions(
+                                                      self.get_random_position(game_message.map.get_map_size()),
+                                                      game_message,
+                                                      base_position, my_crew, unit)))
                 else:
-
-                    if extra_cart and not unit.id in carts:
-                        depot_pos = self.next_to_a_depot(unit.position, game_message.map.depots)
-                        if game_message.map.depots and unit.blitzium < 25 and depot_pos:
-                            # we are next to a depot, pickup
-                            actions.append(UnitAction(UnitActionType.PICKUP,
-                                                      unit.id,
-                                                      depot_pos))
-                        elif game_message.map.depots and unit.blitzium < 25:
-                            #         go to depot
-                            depot_positions = []
-                            for depot in game_message.map.depots:
-                                depot_positions.append(depot.position)
-
-                            sorted_depot_list_positions = self.sorted_list_based_on_distance(base_position,
-                                                                                             depot_positions)
-                            actions.append(UnitAction(UnitActionType.MOVE,
-                                                      unit.id,
-                                                      self.find_empty_positions(sorted_depot_list_positions[0],
-                                                                                game_message, base_position, my_crew,
-                                                                                unit)))
-
-                        elif self.next_to_home(unit.position, base_position) and unit.blitzium > 0:
+                    miner_pos = self.cart_is_next_to_miner(unit.position)
+                    if miner_died:
+                        try:
+                            if miners[carts.index(unit.id)] == "rip":
+                                if game_message.map.depots:
+                                    actions.append(UnitAction(UnitActionType.MOVE,
+                                                              unit.id,
+                                                              game_message.map.depots[0].position))
+                                else:
+                                    continue
+                        except:
+                            continue
+                    elif unit.blitzium != 0:
+                        if self.next_to_home(unit.position, base_position):
                             actions.append(UnitAction(UnitActionType.DROP,
                                                       unit.id,
                                                       base_position))
-                        elif unit.blitzium == 25 or (unit.blitzium > 0 and not game_message.map.depots):
-                            actions.append(UnitAction(UnitActionType.MOVE,
-                                                      unit.id,
-                                                      self.find_empty_positions(base_position, game_message,
-                                                                                base_position, my_crew, unit)))
                         else:
-                            actions.append(UnitAction(UnitActionType.MOVE,
-                                                      unit.id,
-                                                      self.find_empty_positions(
-                                                          self.get_random_position(game_message.map.get_map_size()),
-                                                          game_message,
-                                                          base_position, my_crew, unit)))
-                    else:
-                        miner_pos = self.cart_is_next_to_miner(unit.position)
-                        if miner_died:
+                            blocked = False
+                            for guys in my_crew.units:
+                                if unit.path:
+                                    if unit.path[0] == guys.position:
+                                        blocked = True
+                            if not blocked:
+                                actions.append(UnitAction(UnitActionType.MOVE,
+                                                          unit.id,
+                                                          self.find_empty_positions(base_position, game_message,
+                                                                                    base_position, my_crew, unit)))
+                    elif miner_pos and self.check_if_miner_has_blitz(my_crew):
+                        buddy = None
+                        for temp in my_crew.units:
                             try:
-                                if miners[carts.index(unit.id)] == "rip":
-                                    if game_message.map.depots:
-                                        actions.append(UnitAction(UnitActionType.MOVE,
-                                                                  unit.id,
-                                                                  game_message.map.depots[0].position))
-                                    else:
-                                        continue
+                                if miners[carts.index(unit.id)] == temp.id:
+                                    buddy = temp
+                                    break
                             except:
                                 continue
-                        elif unit.blitzium != 0:
-                            if self.next_to_home(unit.position, base_position):
-                                actions.append(UnitAction(UnitActionType.DROP,
-                                                          unit.id,
-                                                          base_position))
-                            else:
-                                blocked = False
-                                for guys in my_crew.units:
-                                    if unit.path:
-                                        if unit.path[0] == guys.position:
-                                            blocked = True
-                                if not blocked:
-                                    actions.append(UnitAction(UnitActionType.MOVE,
-                                                              unit.id,
-                                                              self.find_empty_positions(base_position, game_message,
-                                                                                        base_position, my_crew, unit)))
-                        elif miner_pos and self.check_if_miner_has_blitz(my_crew):
-                            buddy = None
-                            for temp in my_crew.units:
-                                try:
-                                    if miners[carts.index(unit.id)] == temp.id:
-                                        buddy = temp
-                                        break
-                                except:
-                                    continue
-                            if buddy and self.is_next_to_position(buddy.position, unit.position):
-                                actions.append(UnitAction(UnitActionType.PICKUP,
-                                                          unit.id,
-                                                          buddy.position))
-                            else:
-                                if buddy:
-                                    actions.append(UnitAction(UnitActionType.MOVE,
-                                                              unit.id,
-                                                              self.find_empty_positions(buddy.position, game_message,
-                                                                                        base_position, my_crew, unit)))
-                                else:
-                                    drop = self.find_depot(game_message)
-                                    if drop:
-                                        actions.append(UnitAction(UnitActionType.MOVE,
-                                                                  unit.id,
-                                                                  self.find_empty_positions(drop, game_message,
-                                                                                            base_position, my_crew,
-                                                                                            unit)))
-                                    else:
-                                        actions.append(UnitAction(UnitActionType.MOVE,
-                                                                  unit.id,
-                                                                  self.find_empty_positions(
-                                                                      self.get_random_position(
-                                                                          game_message.map.get_map_size()),
-                                                                      game_message,
-                                                                      base_position, my_crew, unit)))
+                        if buddy and self.is_next_to_position(buddy.position, unit.position):
+                            actions.append(UnitAction(UnitActionType.PICKUP,
+                                                      unit.id,
+                                                      buddy.position))
                         else:
-                            # miner_p = self.find_miner_position(my_crew, unit)
-                            buddy = None
-                            for temp in my_crew.units:
-                                try:
-                                    if miners[carts.index(unit.id)] == temp.id:
-                                        buddy = temp
-                                        break
-                                except:
-                                    continue
                             if buddy:
                                 actions.append(UnitAction(UnitActionType.MOVE,
                                                           unit.id,
@@ -311,16 +287,11 @@ class Bot:
                             else:
                                 drop = self.find_depot(game_message)
                                 if drop:
-                                    if self.is_next_to_position(drop, unit.position):
-                                        actions.append(UnitAction(UnitActionType.PICKUP,
-                                                                  unit.id,
-                                                                  drop))
-                                    else:
-                                        actions.append(UnitAction(UnitActionType.MOVE,
-                                                                  unit.id,
-                                                                  self.find_empty_positions(drop, game_message,
-                                                                                            base_position, my_crew,
-                                                                                            unit)))
+                                    actions.append(UnitAction(UnitActionType.MOVE,
+                                                              unit.id,
+                                                              self.find_empty_positions(drop, game_message,
+                                                                                        base_position, my_crew,
+                                                                                        unit)))
                                 else:
                                     actions.append(UnitAction(UnitActionType.MOVE,
                                                               unit.id,
@@ -329,6 +300,42 @@ class Bot:
                                                                       game_message.map.get_map_size()),
                                                                   game_message,
                                                                   base_position, my_crew, unit)))
+                    else:
+                        # miner_p = self.find_miner_position(my_crew, unit)
+                        buddy = None
+                        for temp in my_crew.units:
+                            try:
+                                if miners[carts.index(unit.id)] == temp.id:
+                                    buddy = temp
+                                    break
+                            except:
+                                continue
+                        if buddy:
+                            actions.append(UnitAction(UnitActionType.MOVE,
+                                                      unit.id,
+                                                      self.find_empty_positions(buddy.position, game_message,
+                                                                                base_position, my_crew, unit)))
+                        else:
+                            drop = self.find_depot(game_message)
+                            if drop:
+                                if self.is_next_to_position(drop, unit.position):
+                                    actions.append(UnitAction(UnitActionType.PICKUP,
+                                                              unit.id,
+                                                              drop))
+                                else:
+                                    actions.append(UnitAction(UnitActionType.MOVE,
+                                                              unit.id,
+                                                              self.find_empty_positions(drop, game_message,
+                                                                                        base_position, my_crew,
+                                                                                        unit)))
+                            else:
+                                actions.append(UnitAction(UnitActionType.MOVE,
+                                                          unit.id,
+                                                          self.find_empty_positions(
+                                                              self.get_random_position(
+                                                                  game_message.map.get_map_size()),
+                                                              game_message,
+                                                              base_position, my_crew, unit)))
 
 
             elif unit.type == UnitType.OUTLAW:
@@ -346,7 +353,7 @@ class Bot:
                                                   unit.id,
                                                   next_miner_pos))
                     elif self.find_empty_positions(next_miner_pos, game_message,
-                                                   base_position):
+                                                   base_position, my_crew, unit):
                         actions.append(UnitAction(UnitActionType.MOVE,
                                                   unit.id,
                                                   self.find_empty_positions(next_miner_pos, game_message,
@@ -361,16 +368,15 @@ class Bot:
 
     def find_available(self, game_message: GameMessage, my_crew: Crew, unit: Unit):
         filtered = self.list_filter_remove_people_tiles(available_spaces, game_message)
-
-        for error in my_crew.errors:
-            if unit.id in error and unit.type == UnitType.MINER and 'No path to' in error:
-                try:
-                    nb = filtered[nminers * -1]
-                    return nb
-                except:
-                    return filtered[0]
         if filtered:
             return filtered[0]
+        return False
+
+
+    def cart_in_error(self, id: str, errors: List):
+        for error in errors:
+            if "No path to" in error and id in error:
+                return True
         return False
 
     def find_miner_position(self, my_crew: Crew):
@@ -419,9 +425,9 @@ class Bot:
         el_list = self.list_filter_remove_people_tiles(temp, game_message)
         if not el_list:
             return None
-        for error in my_crew.errors:
-            if unit.id in error and unit.type == UnitType.CART and 'No path to' in error:
-                return el_list[random.randint(0, len(el_list) - 1)]
+        # for error in my_crew.errors:
+        #     if unit.id in error and unit.type == UnitType.CART and 'No path to' in error:
+        #         return el_list[random.randint(0, len(el_list) - 1)]
         return el_list[0]
 
     def is_next_to_mine(self, game_message: GameMessage, pos: Position):
