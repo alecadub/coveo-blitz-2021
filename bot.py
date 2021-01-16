@@ -25,7 +25,7 @@ class Bot:
 
         if game_message.tick == 0:
             self.get_mine_list(game_message, base_position)
-            self.get_mine_tiles(game_message)
+            self.get_mine_tiles(game_message, base_position)
         elif game_message.tick == 1:
             actions.append(BuyAction(UnitType.CART))
 
@@ -127,13 +127,15 @@ class Bot:
         return sorted_list
 
 
-    def get_mine_tiles(self, game_message: GameMessage):
+    def get_mine_tiles(self, game_message: GameMessage, base: Position): #OPTIMIZEEEEE
         global available_spaces
         directions = [[0, 1], [1, 0], [-1, 0], [0, -1]]
         for pos in mine_list:
             for x, y in directions:
                 if game_message.map.tiles[pos.x + x][pos.y + y] == "EMPTY":
                     available_spaces.append(Position(pos.x + x, pos.y + y))
+
+        available_spaces = self.find_closest_to_position(base, available_spaces)
         return available_spaces
 
 
