@@ -352,7 +352,7 @@ class Bot:
         filtered = self.list_filter_remove_people_tiles(available_spaces, game_message)
 
         for error in my_crew.errors:
-            if unit.id in error and unit.type == UnitType.MINER:
+            if unit.id in error and unit.type == UnitType.MINER and 'No path to' in error:
                 try:
                     nb = filtered[nminers * -1]
                     return nb
