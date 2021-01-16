@@ -31,6 +31,9 @@ class Bot:
 
         # depot_position: Position = game_message.map.depots[0].position
 
+        if my_crew.blitzium > my_crew.prices.OUTLAW and not self.has_outlaw(my_crew):
+            actions.append(BuyAction(UnitType.OUTLAW))
+
         for unit in my_crew.units:
             if unit.type == UnitType.MINER:
                 miner_pos = self.is_next_to_mine(game_message, unit.position)
@@ -64,7 +67,21 @@ class Bot:
 
                     actions.append(UnitAction(UnitActionType.MOVE,
                                               unit.id,
-                                              self.find_empty_positions(miner_positions[0], game_message, base_position)))
+                                              self.find_empty_positions(miner_positions[0], game_message,
+                                                                        base_position)))
+
+            elif unit.type == UnitType.OUTLAW:
+                next_miner_pos = self.find_next_miner(game_message, my_crew)
+                if next_miner_pos:
+                    if self.is_next_to_position(unit.position, next_miner_pos) and my_crew.blitzium > 120:
+                        actions.append(UnitAction(UnitActionType.ATTACK,
+                                                  unit.id,
+                                                  next_miner_pos))
+                    else:
+                        actions.append(UnitAction(UnitActionType.MOVE,
+                                                  unit.id,
+                                                  self.find_empty_positions(next_miner_pos, game_message,
+                                                                            base_position)))
 
         return actions
 
@@ -75,7 +92,6 @@ class Bot:
             return True
         return []
 
-
     def cart_is_next_to_miner(self, curret_pos: Position):
         for miner in miner_positions:
             if miner == Position(curret_pos.x, curret_pos.y + 1) or miner == Position(curret_pos.x,
@@ -83,7 +99,6 @@ class Bot:
                 curret_pos.x + 1, curret_pos.y) or miner == Position(curret_pos.x - 1, curret_pos.y):
                 return miner
         return []
-
 
     def find_empty_positions(self, pos: Position, game_message: GameMessage, base: Position):
         directions = [[0, 1], [1, 0], [-1, 0], [0, -1]]
@@ -95,7 +110,6 @@ class Bot:
             return False
         return self.find_closest_to_position(base, list_of_options)[0]
 
-
     def is_next_to_mine(self, game_message: GameMessage, pos: Position):
         directions = [[0, 1], [1, 0], [-1, 0], [0, -1]]
         for x, y in directions:
@@ -103,7 +117,6 @@ class Bot:
                 miner_positions.append(pos)
                 return Position(pos.x + x, pos.y + y)
         return []
-
 
     def get_mine_list(self, game_message: GameMessage, base: Position):
         global mine_list
@@ -117,7 +130,6 @@ class Bot:
         mine_list = self.find_closest_to_position(base, temp)
         return mine_list
 
-
     def find_closest_to_position(self, pos: Position, random_list: List):
         sorted_list = []
         for x in range(0, len(random_list)):
@@ -126,8 +138,7 @@ class Bot:
             random_list.remove(closest_mine)
         return sorted_list
 
-
-    def get_mine_tiles(self, game_message: GameMessage, base: Position): #OPTIMIZEEEEE
+    def get_mine_tiles(self, game_message: GameMessage, base: Position):  # OPTIMIZEEEEE
         global available_spaces
         directions = [[0, 1], [1, 0], [-1, 0], [0, -1]]
         for pos in mine_list:
@@ -138,10 +149,8 @@ class Bot:
         available_spaces = self.find_closest_to_position(base, available_spaces)
         return available_spaces
 
-
     def distance(self, first: Position, second: Position):
         return math.sqrt(((first.x - second.x) ** 2) + ((first.y - second.y) ** 2))
-
 
     def find_closes_mine(self, pos: Position, minelist: List[Position]):
         closest_mine = minelist[0]
@@ -151,3 +160,41 @@ class Bot:
                 closest_mine = mine
                 dist = self.distance(pos, mine)
         return closest_mine
+
+    def find_next_miner(self, game_message: GameMessage, my_crew: Crew):
+        for crew in game_message.crews:
+            if crew.id != my_crew.id and crew.blitzium > my_crew.blitzium:
+                for unit in crew.units:
+                    if unit.type == UnitType.MINER:
+                        return unit.position
+
+    def are_we_first_place(self, game_message: GameMessage, my_crew: Crew):
+        id_of_current_winner = None
+        blitzium_of_current_winner = 0
+        for crew in game_message.crews:
+            if crew.blitzium > blitzium_of_current_winner:
+                id_of_current_winner = crew.id
+                blitzium_of_current_winner = crew.blitzium
+
+        if id_of_current_winner == my_crew.id:
+            return True
+        else:
+            return False
+
+    def is_next_to_position(self, my_pos: Position, other_pos: Position):
+        directions = [[0, 1], [1, 0], [-1, 0], [0, -1]]
+        is_next = False
+        for x, y in directions:
+            pos_x = my_pos.x + x
+            pos_y = my_pos.y + y
+            if pos_x == other_pos.x and pos_y == other_pos.y:
+                is_next = True
+        return is_next
+
+    def has_outlaw(self, my_crew: Crew):
+        has_outlaw = False
+        for unit in my_crew.units:
+            if unit.type == UnitType.OUTLAW:
+                has_outlaw = True
+
+        return has_outlaw
