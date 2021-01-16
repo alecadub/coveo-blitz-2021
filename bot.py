@@ -7,6 +7,7 @@ mine_list = []
 available_spaces = []
 miner_positions = []
 
+
 class Bot:
 
     def get_next_move(self, game_message: GameMessage) -> List[Action]:
@@ -35,12 +36,12 @@ class Bot:
                 miner_pos = self.is_next_to_mine(game_message, unit.position)
                 if miner_pos:
                     actions.append(UnitAction(UnitActionType.MINE,
-                                                unit.id,
-                                                miner_pos))
+                                              unit.id,
+                                              miner_pos))
                 else:
                     actions.append(UnitAction(UnitActionType.MOVE,
-                               unit.id,
-                               available_spaces[0]))
+                                              unit.id,
+                                              available_spaces[0]))
             elif unit.type == UnitType.CART:
                 miner_pos = self.cart_is_next_to_miner(unit.position)
                 if unit.blitzium != 0:
@@ -48,9 +49,10 @@ class Bot:
                         actions.append(UnitAction(UnitActionType.DROP,
                                                   unit.id,
                                                   base_position))
-                    else: actions.append(UnitAction(UnitActionType.MOVE,
-                                              unit.id,
-                                                Position(base_position.x + 1, base_position.y)))
+                    else:
+                        actions.append(UnitAction(UnitActionType.MOVE,
+                                                  unit.id,
+                                                  Position(base_position.x + 1, base_position.y)))
 
 
                 elif miner_pos:
@@ -61,24 +63,25 @@ class Bot:
                     #     means there is a stationary miner
 
                     actions.append(UnitAction(UnitActionType.MOVE,
-                                          unit.id,
-                                          self.find_empty_positions(miner_positions[0], game_message)))
+                                              unit.id,
+                                              self.find_empty_positions(miner_positions[0], game_message)))
 
         return actions
 
-
     def next_to_home(self, current_pos: Position, base: Position):
-        if base == Position(current_pos.x, current_pos.y + 1) or base == Position(current_pos.x, current_pos.y - 1) or base == Position(current_pos.x + 1, current_pos.y) or base == Position(current_pos.x - 1, current_pos.y):
+        if base == Position(current_pos.x, current_pos.y + 1) or base == Position(current_pos.x,
+                                                                                  current_pos.y - 1) or base == Position(
+            current_pos.x + 1, current_pos.y) or base == Position(current_pos.x - 1, current_pos.y):
             return True
         return []
 
-
     def cart_is_next_to_miner(self, curret_pos: Position):
         for miner in miner_positions:
-            if miner == Position(curret_pos.x, curret_pos.y + 1) or miner == Position(curret_pos.x, curret_pos.y - 1) or miner == Position(curret_pos.x + 1, curret_pos.y) or miner == Position(curret_pos.x - 1, curret_pos.y):
+            if miner == Position(curret_pos.x, curret_pos.y + 1) or miner == Position(curret_pos.x,
+                                                                                      curret_pos.y - 1) or miner == Position(
+                curret_pos.x + 1, curret_pos.y) or miner == Position(curret_pos.x - 1, curret_pos.y):
                 return miner
         return []
-
 
     def find_empty_positions(self, pos: Position, game_message: GameMessage):
         directions = [[0, 1], [1, 0], [-1, 0], [0, -1]]
@@ -87,7 +90,6 @@ class Bot:
                 return Position(pos.x + x, pos.y + y)
         return []
 
-
     def is_next_to_mine(self, game_message: GameMessage, pos: Position):
         directions = [[0, 1], [1, 0], [-1, 0], [0, -1]]
         for x, y in directions:
@@ -95,7 +97,6 @@ class Bot:
                 miner_positions.append(pos)
                 return Position(pos.x + x, pos.y + y)
         return []
-
 
     def get_mine_list(self, game_message: GameMessage):
         global mine_list
@@ -106,10 +107,9 @@ class Bot:
                         mine_list.append(Position(i, j))
         return mine_list
 
-
     def get_mine_tiles(self, game_message: GameMessage):
         global available_spaces
-        directions = [[0,1], [1,1], [1, 0], [-1,0], [-1,-1], [0,-1], [-1,1], [1,-1]]
+        directions = [[0, 1], [1, 1], [1, 0], [-1, 0], [-1, -1], [0, -1], [-1, 1], [1, -1]]
         for pos in mine_list:
             for x, y in directions:
                 if game_message.map.tiles[pos.x + x][pos.y + y] == "EMPTY":
