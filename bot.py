@@ -65,10 +65,10 @@ class Bot:
                                               miner_pos))
                 else:
 
-                        self.find_miner_position(game_message, unit.position)
+                        miner_p =self.find_miner_position(my_crew)
                         actions.append(UnitAction(UnitActionType.MOVE,
                                                 unit.id,
-                                                self.find_empty_positions(miner_positions[0], game_message)))
+                                                self.find_empty_positions(miner_p, game_message,base_position)))
 
             elif unit.type == UnitType.OUTLAW:
                 next_miner_pos = self.find_next_miner(game_message, my_crew)
@@ -90,10 +90,10 @@ class Bot:
     #     for i in range(1,count)
     #         Unit.find("MINER")
 
-    def find_miner_position(self, game_message: GameMessage, pos: Position):
-        directions = [[0, 1], [1, 0], [-1, 0], [0, -1]]
-        for x, y in directions:
-                miner_positions.append(pos)
+    def find_miner_position(self, my_crew:Crew):
+        for unit in my_crew.units:
+            if unit.type==UnitType.MINER:
+                return unit.position
         return []
 
     def next_to_home(self, current_pos: Position, base: Position):
