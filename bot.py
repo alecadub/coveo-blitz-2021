@@ -1,7 +1,7 @@
+import math
 from typing import List
 from game_message import GameMessage, Position, Crew, UnitType
 from game_command import Action, UnitAction, UnitActionType, BuyAction
-import random
 
 mine_list = []
 available_spaces = []
@@ -115,3 +115,14 @@ class Bot:
                 if game_message.map.tiles[pos.x + x][pos.y + y] == "EMPTY":
                     available_spaces.append(Position(pos.x + x, pos.y + y))
         return available_spaces
+
+    def distance(self, first: Position, second: Position):
+        distance = math.sqrt(((first.x-second.x)**2)+((first.y-second.y)**2))
+
+    def find_closes_mine(self, pos: Position):
+        closest_mine = mine_list[0]
+        dist = 1000000000
+        for mine in mine_list:
+            if self.distance(pos, mine) < dist:
+                closest_mine == mine
+        return closest_mine
