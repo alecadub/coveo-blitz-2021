@@ -16,6 +16,8 @@ noutlaws = 0
 miner_died = False
 cart_died = False
 extra_cart = False
+extra_extra_cart = False
+extra_extra_extra_cart = False
 
 
 class Bot:
@@ -37,6 +39,9 @@ class Bot:
         global miner_died
         global cart_died
         global extra_cart
+        global extra_extra_cart
+        global extra_extra_extra_cart
+
 
         actions: List[UnitAction] = []
 
@@ -126,14 +131,14 @@ class Bot:
             if my_crew.blitzium > my_crew.prices.CART and not bought_last_round:
                 actions.append(BuyAction(UnitType.CART))
                 extra_cart = True
-        elif 5 <= len(game_message.map.depots) < 7:
+        elif 5 <= len(game_message.map.depots) < 7 and not extra_extra_cart:
             if my_crew.blitzium > my_crew.prices.CART and not bought_last_round:
                 actions.append(BuyAction(UnitType.CART))
-                extra_cart = True
-        elif len(game_message.map.depots) >= 7:
+                extra_extra_cart = True
+        elif len(game_message.map.depots) >= 7 and not extra_extra_extra_cart:
             if my_crew.blitzium > my_crew.prices.CART and not bought_last_round:
                 actions.append(BuyAction(UnitType.CART))
-                extra_cart = True
+                extra_extra_extra_cart = True
 
         for unit in my_crew.units:
             if unit.type == UnitType.MINER:
