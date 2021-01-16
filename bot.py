@@ -142,7 +142,7 @@ class Bot:
                                 cart_died = True
                                 actions.append(BuyAction(UnitType.CART))
 
-        if 1 < len(game_message.map.depots) < 4 and not extra_cart:
+        if 0 < len(game_message.map.depots) < 4 and not extra_cart:
             if my_crew.blitzium > my_crew.prices.CART and not bought_last_round:
                 actions.append(BuyAction(UnitType.CART))
                 extra_cart = True
