@@ -59,7 +59,7 @@ class Bot:
                     else:
                         actions.append(UnitAction(UnitActionType.MOVE,
                                                   unit.id,
-                                                  Position(base_position.x + 1, base_position.y)))
+                                                  self.find_empty_positions(base_position, game_message, base_position)))
 
 
                 elif miner_pos and self.check_if_miner_has_blitz(my_crew):
