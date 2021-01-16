@@ -12,6 +12,8 @@ bought_last_round = False
 nminers = 0
 ncarts = 0
 noutlaws = 0
+miner_died = False
+cart_died = False
 
 
 class Bot:
@@ -30,12 +32,23 @@ class Bot:
         global ncarts
         global bought_last_round
         global noutlaws
+        global miner_died
+        global cart_died
+
         actions: List[UnitAction] = []
 
         my_crew: Crew = game_message.get_crews_by_id()[game_message.crewId]
         base_position = my_crew.homeBase
-
+        worth = self.is_worth(my_crew, game_message)
         if bought_last_round:
+            if miner_died:
+                i = miners.index('rip')
+                miners[i] = my_crew.units[-1].id
+                miner_died = False
+            elif cart_died:
+                i = carts.index('rip')
+                carts[i] = my_crew.units[-1].id
+                cart_died = False
             if my_crew.units[-1].type == UnitType.MINER:
                 miners.append(my_crew.units[-1].id)
             elif my_crew.units[-1].type == UnitType.CART:
@@ -52,7 +65,7 @@ class Bot:
             ncarts += 1
         elif game_message.tick == 2:
             carts.append(my_crew.units[1].id)
-        elif self.is_worth(my_crew, game_message):
+        elif worth:
             if nminers > ncarts:
                 if my_crew.blitzium > my_crew.prices.CART and ncarts < 3:
                     actions.append(BuyAction(UnitType.CART))
@@ -64,10 +77,27 @@ class Bot:
                     nminers += 1
                     bought_last_round = True
 
-        # if len(my_crew.units) < (noutlaws + nminers + ncarts):
-        #     # someone got killed
-        #
-
+        if len(my_crew.units) < (noutlaws + nminers + ncarts):
+            if worth:
+                for i, id in enumerate(miners):
+                    for unit in my_crew.units:
+                        if unit.id == id:
+                            #miner got killed
+                            miners[i] = "rip"
+                            if(my_crew.blitzium > my_crew.prices.MINER):
+                                bought_last_round = True
+                                miner_died = True
+                                actions.append(BuyAction(UnitType.MINER))
+                if not miner_died:
+                    for i, id in enumerate(carts):
+                        for unit in my_crew.units:
+                            if unit.id == id:
+                                #cart got killed
+                                carts[i] = "rip"
+                                if(my_crew.blitzium > my_crew.prices.CART):
+                                    bought_last_round = True
+                                    cart_died = True
+                                    actions.append(BuyAction(UnitType.CART))
 
         # depot_position: Position = game_message.map.depots[0].position
         # if not self.are_we_first_place(game_message, my_crew):
