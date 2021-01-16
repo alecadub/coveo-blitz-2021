@@ -28,12 +28,6 @@ class Bot:
         actions: List[UnitAction] = [UnitAction(UnitActionType.MOVE,
                                                 unit.id,
                                                 available_spaces[0]) for unit in my_crew.units]
-        my_crew: Crew = game_message.get_crews_by_id()[game_message.crewId]
-
-        actions: List[UnitAction] = [UnitAction(UnitActionType.MOVE,
-                                                unit.id,
-                                                self.get_random_position(
-                                                    game_message.map.get_map_size())) for unit in my_crew.units]
 
         return actions
 
