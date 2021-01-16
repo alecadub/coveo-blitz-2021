@@ -158,7 +158,7 @@ class Bot:
                         sorted_depot_list = self.sorted_list_based_on_distance(base_position, game_message.map.depots)
                         actions.append(UnitAction(UnitActionType.MOVE,
                                                   unit.id,
-                                                  sorted_depot_list[0].position))
+                                                  self.find_empty_positions(sorted_depot_list[0].position)))
                     elif self.next_to_home(unit.position, base_position) and unit.blitzium > 0:
                         actions.append(UnitAction(UnitActionType.DROP,
                                                   unit.id,
