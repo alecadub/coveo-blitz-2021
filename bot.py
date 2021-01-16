@@ -75,7 +75,9 @@ class Bot:
             elif unit.type == UnitType.OUTLAW:
                 next_miner_pos = self.find_next_miner(game_message, my_crew)
                 if next_miner_pos:
-                    if self.is_next_to_position(unit.position, next_miner_pos) and my_crew.blitzium > 120:
+                    if self.is_next_to_position(unit.position,
+                                                next_miner_pos) and my_crew.blitzium > 120 and not self.are_we_first_place(
+                            game_message, my_crew):
                         actions.append(UnitAction(UnitActionType.ATTACK,
                                                   unit.id,
                                                   next_miner_pos))
