@@ -129,6 +129,12 @@ class Bot:
                     actions.append(UnitAction(UnitActionType.MINE,
                                               unit.id,
                                               miner_pos))
+
+                elif not self.find_available(game_message):
+                    if noutlaws == 0:
+                        actions.append(BuyAction(UnitType.OUTLAW))
+                        noutlaws += 1
+
                 else:
                     self.get_free_tile_around_mine(game_message, base_position)
                     actions.append(UnitAction(UnitActionType.MOVE,
@@ -221,7 +227,9 @@ class Bot:
 
     def find_available(self, game_message: GameMessage):
         filtered = self.list_filter_remove_people_tiles(available_spaces, game_message)
-        return filtered[0]
+        if filtered:
+            return filtered[0]
+        return False
 
     def find_miner_position(self, my_crew: Crew):
         for unit in my_crew.units:
