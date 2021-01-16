@@ -70,13 +70,13 @@ class Bot:
             carts.append(my_crew.units[1].id)
         elif worth:
             if nminers > ncarts:
-                if my_crew.blitzium > my_crew.prices.CART and ncarts < 4:
+                if my_crew.blitzium > my_crew.prices.CART:
                     actions.append(BuyAction(UnitType.CART))
                     ncarts += 1
                     bought_last_round = True
             else:
                 self.get_free_tile_around_mine(game_message, base_position)
-                if my_crew.blitzium > my_crew.prices.MINER and nminers < 4 and available_spaces:
+                if my_crew.blitzium > my_crew.prices.MINER and nminers < len(available_spaces):
                     actions.append(BuyAction(UnitType.MINER))
                     nminers += 1
                     bought_last_round = True
