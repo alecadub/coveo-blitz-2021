@@ -199,7 +199,7 @@ class Bot:
                             actions.append(UnitAction(UnitActionType.PICKUP,
                                                       unit.id,
                                                       depot_pos))
-                        elif game_message.map.depots and unit.blitzium < 25:
+                        elif game_message.map.depots and unit.blitzium < 17:
                             #         go to depot
                             depot_positions = []
                             for depot in game_message.map.depots:
@@ -217,7 +217,7 @@ class Bot:
                             actions.append(UnitAction(UnitActionType.DROP,
                                                       unit.id,
                                                       base_position))
-                        elif unit.blitzium == 25 or (unit.blitzium > 0 and not game_message.map.depots):
+                        elif unit.blitzium >= 17 or (unit.blitzium > 0 and not game_message.map.depots):
                             actions.append(UnitAction(UnitActionType.MOVE,
                                                       unit.id,
                                                       self.find_empty_positions(base_position, game_message,
