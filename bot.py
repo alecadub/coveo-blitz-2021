@@ -1,6 +1,6 @@
 from typing import List
 from game_message import GameMessage, Position, Crew, UnitType
-from game_command import Action, UnitAction, UnitActionType
+from game_command import Action, UnitAction, UnitActionType, BuyAction
 import random
 
 mine_list = []
@@ -15,21 +15,18 @@ class Bot:
         No path finding is required, you can simply send a destination per unit and the game will move your unit towards
         it in the next turns.
         """
+        actions: List[UnitAction] = []
 
         base_position = game_message.crews[0].homeBase
         if game_message.tick == 0:
             self.get_mine_list(game_message)
             self.get_mine_tiles(game_message)
+        elif game_message.tick == 1:
+            actions.append(BuyAction(UnitType.CART))
 
         my_crew: Crew = game_message.get_crews_by_id()[game_message.crewId]
 
         # depot_position: Position = game_message.map.depots[0].position
-
-
-
-
-
-        actions: List[UnitAction] = []
 
         for unit in game_message.crews[0].units:
             if unit.type == UnitType.MINER:
@@ -42,6 +39,11 @@ class Bot:
                     actions.append(UnitAction(UnitActionType.MOVE,
                                unit.id,
                                available_spaces[0]))
+            elif unit.type == UnitType.CART:
+                actions.append(UnitAction(UnitActionType.MOVE,
+                                          unit.id,
+                                          Position(2,3)))
+
         return actions
 
     def is_next_to_mine(self, game_message: GameMessage, pos: Position):
