@@ -12,6 +12,7 @@ bought_last_round = False
 nminers = 0
 ncarts = 0
 
+
 class Bot:
 
     def get_next_move(self, game_message: GameMessage) -> List[Action]:
@@ -61,7 +62,6 @@ class Bot:
                     nminers += 1
                     bought_last_round = True
 
-
         # depot_position: Position = game_message.map.depots[0].position
         # if not self.are_we_first_place(game_message, my_crew):
 
@@ -97,8 +97,9 @@ class Bot:
                                     blocked = True
                         if not blocked:
                             actions.append(UnitAction(UnitActionType.MOVE,
-                                                  unit.id,
-                                                  self.find_empty_positions(base_position, game_message, base_position)))
+                                                      unit.id,
+                                                      self.find_empty_positions(base_position, game_message,
+                                                                                base_position)))
 
 
                 elif miner_pos and self.check_if_miner_has_blitz(my_crew):
@@ -109,25 +110,25 @@ class Bot:
                                 buddy = temp
                                 break
                         actions.append(UnitAction(UnitActionType.PICKUP,
-                                              unit.id,
-                                              buddy.position))
+                                                  unit.id,
+                                                  buddy.position))
                 else:
-                        # miner_p = self.find_miner_position(my_crew, unit)
-                        buddy = Unit
-                        for temp in my_crew.units:
-                            if miners[carts.index(unit.id)] == temp.id:
-                                buddy = temp
-                                break
-                        actions.append(UnitAction(UnitActionType.MOVE,
-                                                unit.id,
-                                                self.find_empty_positions(buddy.position, game_message,base_position)))
+                    # miner_p = self.find_miner_position(my_crew, unit)
+                    buddy = Unit
+                    for temp in my_crew.units:
+                        if miners[carts.index(unit.id)] == temp.id:
+                            buddy = temp
+                            break
+                    actions.append(UnitAction(UnitActionType.MOVE,
+                                              unit.id,
+                                              self.find_empty_positions(buddy.position, game_message, base_position)))
 
             elif unit.type == UnitType.OUTLAW:
                 next_miner_pos = self.find_next_miner(game_message, my_crew)
                 if next_miner_pos:
                     if self.is_next_to_position(unit.position,
                                                 next_miner_pos) and my_crew.blitzium > 120 and not self.are_we_first_place(
-                            game_message, my_crew):
+                        game_message, my_crew):
                         actions.append(UnitAction(UnitActionType.ATTACK,
                                                   unit.id,
                                                   next_miner_pos))
@@ -144,7 +145,7 @@ class Bot:
     #     for i in range(1,count)
     #         Unit.find("MINER")
 
-    def find_miner_position(self, my_crew:Crew):
+    def find_miner_position(self, my_crew: Crew):
         for unit in my_crew.units:
             if unit.type == UnitType.MINER:
                 return unit.position
@@ -176,7 +177,6 @@ class Bot:
         temp = self.sorted_list_based_on_distance(base, list_of_options)
         return self.list_filter_remove_people_tiles(temp, game_message)[0]
 
-
     def is_next_to_mine(self, game_message: GameMessage, pos: Position):
         directions = [[0, 1], [1, 0], [-1, 0], [0, -1]]
         for x, y in directions:
@@ -185,7 +185,6 @@ class Bot:
                     miner_positions.append(pos)
                 return Position(pos.x + x, pos.y + y)
         return []
-
 
     def get_mine_list_sorted(self, game_message: GameMessage, base: Position):
         global mine_list
@@ -199,7 +198,6 @@ class Bot:
         mine_list = self.sorted_list_based_on_distance(base, temp)
         return mine_list
 
-
     def sorted_list_based_on_distance(self, pos: Position, random_list: List):
         sorted_list = []
         for x in range(0, len(random_list)):
@@ -208,8 +206,7 @@ class Bot:
             random_list.remove(closest_mine)
         return sorted_list
 
-
-    def get_free_tile_around_mine(self, game_message: GameMessage, base: Position): #hide from people
+    def get_free_tile_around_mine(self, game_message: GameMessage, base: Position):  # hide from people
         global available_spaces
         temp = []
         directions = [[0, 1], [1, 0], [-1, 0], [0, -1]]
@@ -220,7 +217,6 @@ class Bot:
 
         temp = self.sorted_list_based_on_distance(base, temp)
         available_spaces = self.list_filter_remove_people_tiles(temp, game_message)
-
 
     def list_filter_remove_people_tiles(self, spaces: List[Position], game_message: GameMessage):
         unit_list = []
@@ -233,10 +229,8 @@ class Bot:
                 filtered_list.append(space)
         return filtered_list
 
-
     def distance(self, first: Position, second: Position):
         return math.sqrt(((first.x - second.x) ** 2) + ((first.y - second.y) ** 2))
-
 
     def find_closest_point_in_a_list_to_another_point(self, pos: Position, list: List[Position]):
         closest_point = list[0]
@@ -296,7 +290,7 @@ class Bot:
         return False
 
     def is_worth(self, my_crew: Crew, game_message: GameMessage):
-        if(my_crew.prices.CART + my_crew.prices.MINER < 1000 - game_message.tick):
+        if (my_crew.prices.CART + my_crew.prices.MINER < 1000 - game_message.tick):
             return True
         else:
             return False
