@@ -80,7 +80,7 @@ class Bot:
                 else:
                     actions.append(UnitAction(UnitActionType.MOVE,
                                               unit.id,
-                                              available_spaces[miners.index(unit.id)]))
+                                              self.find_available(game_message)))
 
             elif unit.type == UnitType.CART:
                 miner_pos = self.cart_is_next_to_miner(unit.position)
@@ -150,6 +150,12 @@ class Bot:
     #     count = Unit.count("CART")
     #     for i in range(1,count)
     #         Unit.find("MINER")
+
+
+    def find_available(self, game_message: GameMessage):
+        filtered = self.list_filter_remove_people_tiles(available_spaces, game_message)
+        return filtered[0]
+
 
     def find_miner_position(self, my_crew: Crew):
         for unit in my_crew.units:
