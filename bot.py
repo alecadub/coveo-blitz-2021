@@ -549,7 +549,8 @@ class Bot:
         return False
 
     def is_worth(self, my_crew: Crew, game_message: GameMessage):
-        if (((my_crew.prices.CART + my_crew.prices.MINER) * 2 < 1000 - game_message.tick) or nminers < 4 ) and game_message.tick < 750 :
+        if (((
+                     my_crew.prices.CART + my_crew.prices.MINER) * 2 < 1000 - game_message.tick) or nminers < 4) and game_message.tick < 750:
             return True
         else:
             return False
