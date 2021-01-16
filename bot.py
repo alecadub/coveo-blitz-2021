@@ -1,5 +1,5 @@
 from typing import List
-from game_message import GameMessage, Position, Crew
+from game_message import GameMessage, Position, Crew, UnitType
 from game_command import Action, UnitAction, UnitActionType
 import random
 
@@ -25,14 +25,35 @@ class Bot:
 
         # depot_position: Position = game_message.map.depots[0].position
 
-        actions: List[UnitAction] = [UnitAction(UnitActionType.MOVE,
-                                                unit.id,
-                                                available_spaces[0]) for unit in my_crew.units]
 
+
+
+
+        actions: List[UnitAction] = []
+
+        for unit in game_message.crews[0].units:
+            if unit.type == UnitType.MINER:
+                pos = self.is_next_to_mine(game_message, unit.position)
+                if pos:
+                    actions.append(UnitAction(UnitActionType.MINE,
+                                                unit.id,
+                                                pos))
+                else:
+                    actions.append(UnitAction(UnitActionType.MOVE,
+                               unit.id,
+                               available_spaces[0]))
         return actions
+
+    def is_next_to_mine(self, game_message: GameMessage, pos: Position):
+        directions = [[0, 1], [1, 0], [-1, 0], [0, -1]]
+        for x, y in directions:
+            if game_message.map.tiles[pos.x + x][pos.y + y] == "MINE":
+                return Position(pos.x + x, pos.y + y)
+        return []
 
     def get_random_position(self, map_size: int) -> Position:
         return Position(random.randint(0, map_size - 1), random.randint(0, map_size - 1))
+
 
     def get_mine_list(self, game_message: GameMessage):
         global mine_list
@@ -42,6 +63,7 @@ class Bot:
                     if column == "MINE":
                         mine_list.append(Position(i, j))
         return mine_list
+
 
     def get_mine_tiles(self, game_message: GameMessage):
         global available_spaces
