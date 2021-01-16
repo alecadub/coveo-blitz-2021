@@ -425,9 +425,9 @@ class Bot:
         el_list = self.list_filter_remove_people_tiles(temp, game_message)
         if not el_list:
             return None
-        # for error in my_crew.errors:
-        #     if unit.id in error and unit.type == UnitType.CART and 'No path to' in error:
-        #         return el_list[random.randint(0, len(el_list) - 1)]
+        for error in my_crew.errors:
+            if unit.id in error and unit.type == UnitType.CART and 'No path to' in error:
+                return el_list[random.randint(0, len(el_list) - 1)]
         return el_list[0]
 
     def is_next_to_mine(self, game_message: GameMessage, pos: Position):
