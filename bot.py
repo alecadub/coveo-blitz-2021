@@ -24,8 +24,8 @@ class Bot:
         base_position = my_crew.homeBase
 
         if game_message.tick == 0:
-            self.get_mine_list(game_message, base_position)
-            self.get_mine_tiles(game_message, base_position)
+            self.get_mine_list_sorted(game_message, base_position)
+            self.get_free_tile_around_mine(game_message, base_position)
         elif game_message.tick == 1:
             actions.append(BuyAction(UnitType.CART))
 
@@ -65,10 +65,10 @@ class Bot:
                                               miner_pos))
                 else:
 
-                        miner_p =self.find_miner_position(my_crew)
+                        miner_p = self.find_miner_position(my_crew)
                         actions.append(UnitAction(UnitActionType.MOVE,
                                                 unit.id,
-                                                self.find_empty_positions(miner_p, game_message,base_position)))
+                                                self.find_empty_positions(miner_p, game_message, base_position)))
 
             elif unit.type == UnitType.OUTLAW:
                 next_miner_pos = self.find_next_miner(game_message, my_crew)
@@ -119,7 +119,9 @@ class Bot:
                 list_of_options.append(Position(pos.x + x, pos.y + y))
         if not list_of_options:
             return False
-        return self.find_closest_to_position(base, list_of_options)[0]
+        temp = self.sorted_list_based_on_distance(base, list_of_options)
+        return self.list_filter_remove_people_tiles(temp, game_message)[0]
+
 
     def is_next_to_mine(self, game_message: GameMessage, pos: Position):
         directions = [[0, 1], [1, 0], [-1, 0], [0, -1]]
@@ -129,7 +131,8 @@ class Bot:
                 return Position(pos.x + x, pos.y + y)
         return []
 
-    def get_mine_list(self, game_message: GameMessage, base: Position):
+
+    def get_mine_list_sorted(self, game_message: GameMessage, base: Position):
         global mine_list
         temp = []
         if game_message.tick == 0:
@@ -138,39 +141,56 @@ class Bot:
                     if column == "MINE":
                         temp.append(Position(i, j))
         # sort by distance from base
-        mine_list = self.find_closest_to_position(base, temp)
+        mine_list = self.sorted_list_based_on_distance(base, temp)
         return mine_list
 
-    def find_closest_to_position(self, pos: Position, random_list: List):
+
+    def sorted_list_based_on_distance(self, pos: Position, random_list: List):
         sorted_list = []
         for x in range(0, len(random_list)):
-            closest_mine = self.find_closes_mine(pos, random_list)
+            closest_mine = self.find_closest_point_in_a_list_to_another_point(pos, random_list)
             sorted_list.append(closest_mine)
             random_list.remove(closest_mine)
         return sorted_list
 
-    def get_mine_tiles(self, game_message: GameMessage, base: Position):  # OPTIMIZEEEEE
+
+    def get_free_tile_around_mine(self, game_message: GameMessage, base: Position): #hide from people
         global available_spaces
+        temp = []
         directions = [[0, 1], [1, 0], [-1, 0], [0, -1]]
         for pos in mine_list:
             for x, y in directions:
                 if game_message.map.tiles[pos.x + x][pos.y + y] == "EMPTY":
-                    available_spaces.append(Position(pos.x + x, pos.y + y))
+                    temp.append(Position(pos.x + x, pos.y + y))
 
-        available_spaces = self.find_closest_to_position(base, available_spaces)
-        return available_spaces
+        temp = self.sorted_list_based_on_distance(base, temp)
+        available_spaces = self.list_filter_remove_people_tiles(temp, game_message)
+
+
+    def list_filter_remove_people_tiles(self, spaces: List[Position], game_message: GameMessage):
+        unit_list = []
+        filtered_list = []
+        for crew in game_message.crews:
+            for unit in crew.units:
+                unit_list.append(unit.position)
+        for space in spaces:
+            if not space in unit_list:
+                filtered_list.append(space)
+        return filtered_list
+
 
     def distance(self, first: Position, second: Position):
         return math.sqrt(((first.x - second.x) ** 2) + ((first.y - second.y) ** 2))
 
-    def find_closes_mine(self, pos: Position, minelist: List[Position]):
-        closest_mine = minelist[0]
+
+    def find_closest_point_in_a_list_to_another_point(self, pos: Position, list: List[Position]):
+        closest_point = list[0]
         dist = 1000000000
-        for mine in minelist:
-            if self.distance(pos, mine) < dist:
-                closest_mine = mine
-                dist = self.distance(pos, mine)
-        return closest_mine
+        for point in list:
+            if self.distance(pos, point) < dist:
+                closest_point = point
+                dist = self.distance(pos, point)
+        return closest_point
 
     def find_next_miner(self, game_message: GameMessage, my_crew: Crew):
         for crew in game_message.crews:
@@ -215,3 +235,5 @@ class Bot:
             if unit.type == UnitType.MINER and unit.blitzium > 0:
                 return True
         return False
+
+    # def check_if_someone_on_tile(self, pos: Position):
