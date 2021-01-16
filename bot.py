@@ -163,7 +163,8 @@ class Bot:
                         sorted_depot_list_positions = self.sorted_list_based_on_distance(base_position, depot_positions)
                         actions.append(UnitAction(UnitActionType.MOVE,
                                                   unit.id,
-                                                  self.find_empty_positions(sorted_depot_list_positions[0], game_message, base_position)))
+                                                  self.find_empty_positions(sorted_depot_list_positions[0],
+                                                                            game_message, base_position)))
 
                     elif self.next_to_home(unit.position, base_position) and unit.blitzium > 0:
                         actions.append(UnitAction(UnitActionType.DROP,
@@ -240,7 +241,8 @@ class Bot:
                                     actions.append(UnitAction(UnitActionType.MOVE,
                                                               unit.id,
                                                               self.find_empty_positions(
-                                                                  self.get_random_position(game_message.map.get_map_size()),
+                                                                  self.get_random_position(
+                                                                      game_message.map.get_map_size()),
                                                                   game_message,
                                                                   base_position)))
                     else:
@@ -261,10 +263,15 @@ class Bot:
                         else:
                             drop = self.find_depot(game_message)
                             if drop:
-                                actions.append(UnitAction(UnitActionType.MOVE,
-                                                          unit.id,
-                                                          self.find_empty_positions(drop, game_message,
-                                                                                    base_position)))
+                                if self.is_next_to_position(drop, unit.position):
+                                    actions.append(UnitAction(UnitActionType.PICKUP,
+                                                              unit.id,
+                                                              drop))
+                                else:
+                                    actions.append(UnitAction(UnitActionType.MOVE,
+                                                              unit.id,
+                                                              self.find_empty_positions(drop, game_message,
+                                                                                        base_position)))
                             else:
                                 actions.append(UnitAction(UnitActionType.MOVE,
                                                           unit.id,
@@ -301,8 +308,6 @@ class Bot:
             if pos == depot.position:
                 return True
         return False
-
-
 
     def find_available(self, game_message: GameMessage):
         filtered = self.list_filter_remove_people_tiles(available_spaces, game_message)
@@ -348,7 +353,7 @@ class Bot:
         x_length = len(game_message.map.tiles[0])
         list_of_options = []
         for x, y in directions:
-            if game_message.map.tiles[(pos.x + x)%x_length][(pos.y + y)%y_length] == "EMPTY":
+            if game_message.map.tiles[(pos.x + x) % x_length][(pos.y + y) % y_length] == "EMPTY":
                 list_of_options.append(Position(pos.x + x, pos.y + y))
         if not list_of_options:
             return False
