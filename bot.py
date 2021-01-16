@@ -48,15 +48,15 @@ class Bot:
             actions.append(BuyAction(UnitType.CART))
             ncarts += 1
         elif game_message.tick == 2:
-            carts.append(my_crew.units[0].id)
+            carts.append(my_crew.units[1].id)
         elif self.is_worth(my_crew, game_message):
             if nminers > ncarts:
-                if my_crew.blitzium > my_crew.prices.CART:
+                if my_crew.blitzium > my_crew.prices.CART and ncarts < 3:
                     actions.append(BuyAction(UnitType.CART))
                     ncarts += 1
                     bought_last_round = True
             else:
-                if my_crew.blitzium > my_crew.prices.MINER:
+                if my_crew.blitzium > my_crew.prices.MINER and nminers < 3:
                     actions.append(BuyAction(UnitType.MINER))
                     nminers += 1
                     bought_last_round = True
@@ -90,21 +90,37 @@ class Bot:
                                                   unit.id,
                                                   base_position))
                     else:
-                        actions.append(UnitAction(UnitActionType.MOVE,
+                        blocked = False
+                        for guys in my_crew.units:
+                            if unit.path:
+                                if unit.path[0] == guys.position:
+                                    blocked = True
+                        if not blocked:
+                            actions.append(UnitAction(UnitActionType.MOVE,
                                                   unit.id,
                                                   self.find_empty_positions(base_position, game_message, base_position)))
 
 
                 elif miner_pos and self.check_if_miner_has_blitz(my_crew):
                     if not unit.path:
+                        buddy = Unit
+                        for temp in my_crew.units:
+                            if miners[carts.index(unit.id)] == temp.id:
+                                buddy = temp
+                                break
                         actions.append(UnitAction(UnitActionType.PICKUP,
                                               unit.id,
-                                              miner_pos))
+                                              buddy.position))
                 else:
                         # miner_p = self.find_miner_position(my_crew, unit)
+                        buddy = Unit
+                        for temp in my_crew.units:
+                            if miners[carts.index(unit.id)] == temp.id:
+                                buddy = temp
+                                break
                         actions.append(UnitAction(UnitActionType.MOVE,
                                                 unit.id,
-                                                self.find_empty_positions(my_crew[my_crew.units.index()], game_message,base_position)))
+                                                self.find_empty_positions(buddy.position, game_message,base_position)))
 
             elif unit.type == UnitType.OUTLAW:
                 next_miner_pos = self.find_next_miner(game_message, my_crew)
@@ -128,7 +144,7 @@ class Bot:
     #     for i in range(1,count)
     #         Unit.find("MINER")
 
-    def find_miner_position(self, my_crew:Crew, cart:Unit):
+    def find_miner_position(self, my_crew:Crew):
         for unit in my_crew.units:
             if unit.type == UnitType.MINER:
                 return unit.position
