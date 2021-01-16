@@ -103,18 +103,18 @@ class Bot:
 
 
                 elif miner_pos and self.check_if_miner_has_blitz(my_crew):
-                    if not unit.path:
-                        buddy = Unit
-                        for temp in my_crew.units:
-                            if miners[carts.index(unit.id)] == temp.id:
-                                buddy = temp
-                                break
+                    buddy: Unit
+                    for temp in my_crew.units:
+                        if miners[carts.index(unit.id)] == temp.id:
+                            buddy = temp
+                            break
+                    if self.is_next_to_position(buddy.position, unit.position):
                         actions.append(UnitAction(UnitActionType.PICKUP,
                                                   unit.id,
                                                   buddy.position))
                 else:
                     # miner_p = self.find_miner_position(my_crew, unit)
-                    buddy = Unit
+                    buddy: Unit
                     for temp in my_crew.units:
                         if miners[carts.index(unit.id)] == temp.id:
                             buddy = temp
@@ -175,6 +175,8 @@ class Bot:
         if not list_of_options:
             return False
         temp = self.sorted_list_based_on_distance(base, list_of_options)
+        if not self.list_filter_remove_people_tiles(temp, game_message):
+            return self.find_empty_positions(base, game_message, base)
         return self.list_filter_remove_people_tiles(temp, game_message)[0]
 
     def is_next_to_mine(self, game_message: GameMessage, pos: Position):
