@@ -1,7 +1,7 @@
 import math
 import random
 from typing import List
-from game_message import GameMessage, Position, Crew, UnitType, Unit
+from game_message import GameMessage, Position, Crew, UnitType, Unit, Depot
 from game_command import Action, UnitAction, UnitActionType, BuyAction
 
 mine_list = []
@@ -116,6 +116,11 @@ class Bot:
                                 cart_died = True
                                 actions.append(BuyAction(UnitType.CART))
 
+        if game_message.map.depots and not extra_cart:
+            if my_crew.blitzium > my_crew.prices.CART and not bought_last_round:
+                actions.append(BuyAction(UnitType.CART))
+                extra_cart = True
+
         if not self.are_we_first_place(game_message,
                                        my_crew) and my_crew.blitzium > my_crew.prices.OUTLAW and not self.has_outlaw(
             my_crew):
@@ -142,6 +147,35 @@ class Bot:
                                               self.find_available(game_message)))
 
             elif unit.type == UnitType.CART:
+                if extra_cart and not unit.id in carts:
+                    depot_pos = self.next_to_a_depot(unit.position, game_message.map.depots)
+                    if game_message.map.depots and unit.blitzium < 25 and depot_pos:
+                        actions.append(UnitAction(UnitActionType.PICKUP,
+                                                  unit.id,
+                                                  depot_pos))
+                    elif game_message.map.depots and unit.blitzium < 25:
+                        #         go to depot
+                        sorted_depot_list = self.sorted_list_based_on_distance(base_position, game_message.map.depots)
+                        actions.append(UnitAction(UnitActionType.MOVE,
+                                                  unit.id,
+                                                  sorted_depot_list[0].position))
+                    elif self.next_to_home(unit.position, base_position) and unit.blitzium > 0:
+                        actions.append(UnitAction(UnitActionType.DROP,
+                                                  unit.id,
+                                                  base_position))
+                    elif unit.blitzium == 25:
+                        actions.append(UnitAction(UnitActionType.MOVE,
+                                                  unit.id,
+                                                  self.find_empty_positions(base_position, game_message,
+                                                                            base_position)))
+                    else:
+                        actions.append(UnitAction(UnitActionType.MOVE,
+                                                  unit.id,
+                                                  self.find_empty_positions(
+                                                      self.get_random_position(game_message.map.get_map_size()),
+                                                      game_message,
+                                                      base_position)))
+
                 miner_pos = self.cart_is_next_to_miner(unit.position)
                 if miner_died:
                     try:
@@ -149,7 +183,7 @@ class Bot:
                             if game_message.map.depots:
                                 actions.append(UnitAction(UnitActionType.MOVE,
                                                           unit.id,
-                                                          game_message.map.depots[0]))
+                                                          game_message.map.depots[0].position))
                             else:
                                 continue
                     except:
@@ -262,6 +296,14 @@ class Bot:
             if unit.type == UnitType.MINER:
                 return unit.position
         return []
+
+    def next_to_a_depot(self, pos: Position, depots: List[Depot]):
+        #     iterate throught the depots, if its next to it return that, if not return false
+        for depot in depots:
+            if self.is_next_to_position(depot.position, pos):
+                # aim towards the depot
+                return depot.position
+        return False
 
     def get_random_position(self, map_size: int) -> Position:
         return Position(random.randint(0, map_size - 1), random.randint(0, map_size - 1))
