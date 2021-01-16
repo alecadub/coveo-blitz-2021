@@ -1,4 +1,5 @@
 import math
+from random import random
 from typing import List
 from game_message import GameMessage, Position, Crew, UnitType, Unit
 from game_command import Action, UnitAction, UnitActionType, BuyAction
@@ -137,7 +138,11 @@ class Bot:
                                                   unit.id,
                                                   self.find_empty_positions(next_miner_pos, game_message,
                                                                             base_position)))
-
+            if unit.position == base_position:
+                #means its stuck on home base
+                actions.append(UnitAction(UnitActionType.MOVE,
+                                          unit.id,
+                                          self.get_random_position(game_message.map.get_map_size())))
         return actions
 
     # def assign_the_cart(self, current_pos: Position):
@@ -150,6 +155,11 @@ class Bot:
             if unit.type == UnitType.MINER:
                 return unit.position
         return []
+
+
+    def get_random_position(self, map_size: int) -> Position:
+        return Position(random.randint(0, map_size - 1), random.randint(0, map_size - 1))
+
 
     def next_to_home(self, current_pos: Position, base: Position):
         if base == Position(current_pos.x, current_pos.y + 1) or base == Position(current_pos.x,
