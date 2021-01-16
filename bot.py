@@ -42,6 +42,7 @@ class Bot:
 
         my_crew: Crew = game_message.get_crews_by_id()[game_message.crewId]
         base_position = my_crew.homeBase
+
         worth = self.is_worth(my_crew, game_message)
         if bought_last_round:
             if miner_died:
@@ -69,16 +70,17 @@ class Bot:
         elif game_message.tick == 2:
             carts.append(my_crew.units[1].id)
         elif worth:
-            if nminers > ncarts:
-                if my_crew.blitzium > my_crew.prices.CART:
-                    actions.append(BuyAction(UnitType.CART))
-                    ncarts += 1
-                    bought_last_round = True
-            else:
+            if nminers <= ncarts:
                 self.get_free_tile_around_mine(game_message, base_position)
                 if my_crew.blitzium > my_crew.prices.MINER and nminers < len(available_spaces):
                     actions.append(BuyAction(UnitType.MINER))
                     nminers += 1
+                    bought_last_round = True
+        else:
+            if nminers > ncarts:
+                if my_crew.blitzium > my_crew.prices.CART:
+                    actions.append(BuyAction(UnitType.CART))
+                    ncarts += 1
                     bought_last_round = True
 
         if game_message.tick > 5 and len(my_crew.units) < (noutlaws + nminers + ncarts) and not bought_last_round:
@@ -475,7 +477,7 @@ class Bot:
         return False
 
     def is_worth(self, my_crew: Crew, game_message: GameMessage):
-        if (my_crew.prices.CART + my_crew.prices.MINER < 1000 - game_message.tick):
+        if ((my_crew.prices.CART + my_crew.prices.MINER)*3 < 1000 - game_message.tick) or nminers < 4:
             return True
         else:
             return False
