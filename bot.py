@@ -11,6 +11,7 @@ carts = []
 bought_last_round = False
 nminers = 0
 ncarts = 0
+noutlaws = 0
 
 class Bot:
 
@@ -27,6 +28,7 @@ class Bot:
         global nminers
         global ncarts
         global bought_last_round
+        global noutlaws
         actions: List[UnitAction] = []
 
         my_crew: Crew = game_message.get_crews_by_id()[game_message.crewId]
@@ -61,6 +63,10 @@ class Bot:
                     nminers += 1
                     bought_last_round = True
 
+        # if len(my_crew.units) < (noutlaws + nminers + ncarts):
+        #     # someone got killed
+        #
+
 
         # depot_position: Position = game_message.map.depots[0].position
         # if not self.are_we_first_place(game_message, my_crew):
@@ -69,6 +75,7 @@ class Bot:
                                        my_crew) and my_crew.blitzium > my_crew.prices.OUTLAW and not self.has_outlaw(
             my_crew):
             actions.append(BuyAction(UnitType.OUTLAW))
+            noutlaws += 1
 
         for unit in my_crew.units:
             if unit.type == UnitType.MINER:
@@ -111,6 +118,16 @@ class Bot:
                         actions.append(UnitAction(UnitActionType.PICKUP,
                                               unit.id,
                                               buddy.position))
+                    else:
+                        buddy = Unit
+                        for temp in my_crew.units:
+                            if miners[carts.index(unit.id)] == temp.id:
+                                buddy = temp
+                                break
+                        actions.append(UnitAction(UnitActionType.MOVE,
+                                                  unit.id,
+                                                  self.find_empty_positions(buddy.position, game_message,
+                                                                            base_position)))
                 else:
                         # miner_p = self.find_miner_position(my_crew, unit)
                         buddy = Unit
