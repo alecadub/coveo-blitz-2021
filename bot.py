@@ -213,9 +213,26 @@ class Bot:
                                 break
                         except:
                             continue
-                    actions.append(UnitAction(UnitActionType.MOVE,
-                                              unit.id,
-                                              self.find_empty_positions(buddy.position, game_message, base_position)))
+                    if buddy:
+                        actions.append(UnitAction(UnitActionType.MOVE,
+                                                  unit.id,
+                                                  self.find_empty_positions(buddy.position, game_message,
+                                                                            base_position)))
+                    else:
+                        drop = self.find_depot(game_message)
+                        if drop:
+                            actions.append(UnitAction(UnitActionType.MOVE,
+                                                      unit.id,
+                                                      self.find_empty_positions(drop, game_message,
+                                                                                base_position)))
+                        else:
+                            actions.append(UnitAction(UnitActionType.MOVE,
+                                                      unit.id,
+                                                      self.find_empty_positions(
+                                                          self.get_random_position(game_message.map.get_map_size()),
+                                                          game_message,
+                                                          base_position)))
+
 
             elif unit.type == UnitType.OUTLAW:
                 next_miner_pos = self.find_next_miner(game_message, my_crew)
