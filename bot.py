@@ -15,6 +15,7 @@ ncarts = 0
 noutlaws = 0
 miner_died = False
 cart_died = False
+extra_cart = False
 
 
 class Bot:
@@ -35,6 +36,7 @@ class Bot:
         global noutlaws
         global miner_died
         global cart_died
+        global extra_cart
 
         actions: List[UnitAction] = []
 
@@ -73,7 +75,7 @@ class Bot:
                     ncarts += 1
                     bought_last_round = True
             else:
-                if my_crew.blitzium > my_crew.prices.MINER and nminers < 4:
+                if my_crew.blitzium > my_crew.prices.MINER and nminers < 4 and available_spaces:
                     actions.append(BuyAction(UnitType.MINER))
                     nminers += 1
                     bought_last_round = True
@@ -112,6 +114,10 @@ class Bot:
                                 bought_last_round = True
                                 cart_died = True
                                 actions.append(BuyAction(UnitType.CART))
+
+        # if game_message.map.depots and not extra_cart:
+        #     if my_crew.blitzium > my_crew.prices.CART and not bought_last_round:
+        #         actions.append(BuyAction(UnitType.CART))
 
         # depot_position: Position = game_message.map.depots[0].position
         # if not self.are_we_first_place(game_message, my_crew):
