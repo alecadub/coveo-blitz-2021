@@ -115,9 +115,9 @@ class Bot:
                                 cart_died = True
                                 actions.append(BuyAction(UnitType.CART))
 
-        # if game_message.map.depots and not extra_cart:
-        #     if my_crew.blitzium > my_crew.prices.CART and not bought_last_round:
-        #         actions.append(BuyAction(UnitType.CART))
+        if game_message.map.depots and not extra_cart:
+            if my_crew.blitzium > my_crew.prices.CART and not bought_last_round:
+                actions.append(BuyAction(UnitType.CART))
 
         # depot_position: Position = game_message.map.depots[0].position
         # if not self.are_we_first_place(game_message, my_crew):
