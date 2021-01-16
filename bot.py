@@ -20,14 +20,14 @@ class Bot:
         global miner_positions
         actions: List[UnitAction] = []
 
+        my_crew: Crew = game_message.get_crews_by_id()[game_message.crewId]
+        base_position = my_crew.homeBase
+
         if game_message.tick == 0:
-            self.get_mine_list(game_message)
+            self.get_mine_list(game_message, base_position)
             self.get_mine_tiles(game_message)
         elif game_message.tick == 1:
             actions.append(BuyAction(UnitType.CART))
-
-        my_crew: Crew = game_message.get_crews_by_id()[game_message.crewId]
-        base_position = my_crew.homeBase
 
         # depot_position: Position = game_message.map.depots[0].position
 
@@ -98,18 +98,24 @@ class Bot:
                 return Position(pos.x + x, pos.y + y)
         return []
 
-    def get_mine_list(self, game_message: GameMessage):
+    def get_mine_list(self, game_message: GameMessage, base: Position):
         global mine_list
+        temp = []
         if game_message.tick == 0:
             for i, row in enumerate(game_message.map.tiles):
                 for j, column in enumerate(row):
                     if column == "MINE":
-                        mine_list.append(Position(i, j))
+                        temp.append(Position(i, j))
+        # sort by distance from base
+        for x in range(0, len(temp)):
+            closest_mine = self.find_closes_mine(base, temp)
+            mine_list.append(closest_mine)
+            temp.remove(closest_mine)
         return mine_list
 
     def get_mine_tiles(self, game_message: GameMessage):
         global available_spaces
-        directions = [[0, 1], [1, 1], [1, 0], [-1, 0], [-1, -1], [0, -1], [-1, 1], [1, -1]]
+        directions = [[0, 1], [1, 0], [-1, 0], [0, -1]]
         for pos in mine_list:
             for x, y in directions:
                 if game_message.map.tiles[pos.x + x][pos.y + y] == "EMPTY":
@@ -117,12 +123,13 @@ class Bot:
         return available_spaces
 
     def distance(self, first: Position, second: Position):
-        distance = math.sqrt(((first.x-second.x)**2)+((first.y-second.y)**2))
+        return math.sqrt(((first.x - second.x) ** 2) + ((first.y - second.y) ** 2))
 
-    def find_closes_mine(self, pos: Position):
-        closest_mine = mine_list[0]
+
+    def find_closes_mine(self, pos: Position, minelist: List[Position]):
+        closest_mine = minelist[0]
         dist = 1000000000
-        for mine in mine_list:
+        for mine in minelist:
             if self.distance(pos, mine) < dist:
                 closest_mine == mine
         return closest_mine
