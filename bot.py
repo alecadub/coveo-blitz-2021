@@ -346,7 +346,7 @@ class Bot:
                                                   unit.id,
                                                   next_miner_pos))
                     elif self.find_empty_positions(next_miner_pos, game_message,
-                                                   base_position):
+                                                   base_position, my_crew, unit):
                         actions.append(UnitAction(UnitActionType.MOVE,
                                                   unit.id,
                                                   self.find_empty_positions(next_miner_pos, game_message,
