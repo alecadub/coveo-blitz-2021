@@ -191,7 +191,7 @@ class Bot:
                                                   self.get_random_position(game_message.map.get_map_size()),
                                                   game_message,
                                                   base_position, my_crew, unit)))
-                elif self.cart_in_error(unit.id, my_crew.errors):
+                elif self.cart_in_error(unit.id, my_crew.errors) and unit.blitzium == 0:
                     actions.append(UnitAction(UnitActionType.MOVE,
                                               unit.id,
                                               self.find_empty_positions(
