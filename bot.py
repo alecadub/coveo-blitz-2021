@@ -1,6 +1,6 @@
 import math
 from typing import List
-from game_message import GameMessage, Position, Crew, UnitType
+from game_message import GameMessage, Position, Crew, UnitType, Unit
 from game_command import Action, UnitAction, UnitActionType, BuyAction
 
 mine_list = []
@@ -45,6 +45,7 @@ class Bot:
                     actions.append(UnitAction(UnitActionType.MOVE,
                                               unit.id,
                                               available_spaces[0]))
+
             elif unit.type == UnitType.CART:
                 miner_pos = self.cart_is_next_to_miner(unit.position)
                 if unit.blitzium != 0:
@@ -58,17 +59,16 @@ class Bot:
                                                   Position(base_position.x + 1, base_position.y)))
 
 
-                elif miner_pos:
+                elif miner_pos and self.check_if_miner_has_blitz(my_crew):
                     actions.append(UnitAction(UnitActionType.PICKUP,
                                               unit.id,
                                               miner_pos))
-                elif miner_positions:
-                    #     means there is a stationary miner
+                else:
 
-                    actions.append(UnitAction(UnitActionType.MOVE,
-                                              unit.id,
-                                              self.find_empty_positions(miner_positions[0], game_message,
-                                                                        base_position)))
+                        miner_p =self.find_miner_position(my_crew)
+                        actions.append(UnitAction(UnitActionType.MOVE,
+                                                unit.id,
+                                                self.find_empty_positions(miner_p, game_message,base_position)))
 
             elif unit.type == UnitType.OUTLAW:
                 next_miner_pos = self.find_next_miner(game_message, my_crew)
@@ -84,6 +84,17 @@ class Bot:
                                                                             base_position)))
 
         return actions
+
+    # def assign_the_cart(self, current_pos: Position):
+    #     count = Unit.count("CART")
+    #     for i in range(1,count)
+    #         Unit.find("MINER")
+
+    def find_miner_position(self, my_crew:Crew):
+        for unit in my_crew.units:
+            if unit.type==UnitType.MINER:
+                return unit.position
+        return []
 
     def next_to_home(self, current_pos: Position, base: Position):
         if base == Position(current_pos.x, current_pos.y + 1) or base == Position(current_pos.x,
@@ -198,3 +209,9 @@ class Bot:
                 has_outlaw = True
 
         return has_outlaw
+
+    def check_if_miner_has_blitz(self, my_crew: Crew):
+        for unit in my_crew.units:
+            if unit.type == UnitType.MINER and unit.blitzium > 0:
+                return True
+        return False
