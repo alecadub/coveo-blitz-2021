@@ -6,7 +6,11 @@ from game_command import Action, UnitAction, UnitActionType, BuyAction
 mine_list = []
 available_spaces = []
 miner_positions = []
-
+miners = []
+carts = []
+bought_last_round = False
+nminers = 0
+ncarts = 0
 
 class Bot:
 
@@ -18,16 +22,45 @@ class Bot:
         it in the next turns.
         """
         global miner_positions
+        global miners
+        global carts
+        global nminers
+        global ncarts
+        global bought_last_round
         actions: List[UnitAction] = []
 
         my_crew: Crew = game_message.get_crews_by_id()[game_message.crewId]
         base_position = my_crew.homeBase
 
+        if bought_last_round:
+            if my_crew.units[-1].type == UnitType.MINER:
+                miners.append(my_crew.units[-1].id)
+            elif my_crew.units[-1].type == UnitType.CART:
+                carts.append(my_crew.units[-1].id)
+        bought_last_round = False
+
         if game_message.tick == 0:
             self.get_mine_list(game_message, base_position)
             self.get_mine_tiles(game_message, base_position)
+            nminers += 1
+            miners.append(my_crew.units[0].id)
         elif game_message.tick == 1:
             actions.append(BuyAction(UnitType.CART))
+            ncarts += 1
+        elif game_message.tick == 2:
+            carts.append(my_crew.units[0].id)
+        elif self.is_worth(my_crew, game_message):
+            if nminers > ncarts:
+                if my_crew.blitzium > my_crew.prices.CART:
+                    actions.append(BuyAction(UnitType.CART))
+                    ncarts += 1
+                    bought_last_round = True
+            else:
+                if my_crew.blitzium > my_crew.prices.MINER:
+                    actions.append(BuyAction(UnitType.MINER))
+                    nminers += 1
+                    bought_last_round = True
+
 
         # depot_position: Position = game_message.map.depots[0].position
 
@@ -44,7 +77,7 @@ class Bot:
                 else:
                     actions.append(UnitAction(UnitActionType.MOVE,
                                               unit.id,
-                                              available_spaces[0]))
+                                              available_spaces[miners.index(unit.id)]))
 
             elif unit.type == UnitType.CART:
                 miner_pos = self.cart_is_next_to_miner(unit.position)
@@ -60,15 +93,15 @@ class Bot:
 
 
                 elif miner_pos and self.check_if_miner_has_blitz(my_crew):
-                    actions.append(UnitAction(UnitActionType.PICKUP,
+                    if not unit.path:
+                        actions.append(UnitAction(UnitActionType.PICKUP,
                                               unit.id,
                                               miner_pos))
                 else:
-
-                        miner_p =self.find_miner_position(my_crew)
+                        # miner_p = self.find_miner_position(my_crew, unit)
                         actions.append(UnitAction(UnitActionType.MOVE,
                                                 unit.id,
-                                                self.find_empty_positions(miner_p, game_message,base_position)))
+                                                self.find_empty_positions(my_crew[my_crew.units.index()], game_message,base_position)))
 
             elif unit.type == UnitType.OUTLAW:
                 next_miner_pos = self.find_next_miner(game_message, my_crew)
@@ -90,7 +123,7 @@ class Bot:
     #     for i in range(1,count)
     #         Unit.find("MINER")
 
-    def find_miner_position(self, my_crew:Crew):
+    def find_miner_position(self, my_crew:Crew, cart:Unit):
         for unit in my_crew.units:
             if unit.type==UnitType.MINER:
                 return unit.position
@@ -125,7 +158,8 @@ class Bot:
         directions = [[0, 1], [1, 0], [-1, 0], [0, -1]]
         for x, y in directions:
             if game_message.map.tiles[pos.x + x][pos.y + y] == "MINE":
-                miner_positions.append(pos)
+                if pos not in miner_positions:
+                    miner_positions.append(pos)
                 return Position(pos.x + x, pos.y + y)
         return []
 
@@ -215,3 +249,9 @@ class Bot:
             if unit.type == UnitType.MINER and unit.blitzium > 0:
                 return True
         return False
+
+    def is_worth(self, my_crew: Crew, game_message: GameMessage):
+        if(my_crew.prices.CART + my_crew.prices.MINER < 1000 - game_message.tick):
+            return True
+        else:
+            return False
