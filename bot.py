@@ -30,8 +30,11 @@ class Bot:
             actions.append(BuyAction(UnitType.CART))
 
         # depot_position: Position = game_message.map.depots[0].position
+        # if not self.are_we_first_place(game_message, my_crew):
 
-        if my_crew.blitzium > my_crew.prices.OUTLAW and not self.has_outlaw(my_crew):
+        if not self.are_we_first_place(game_message,
+                                       my_crew) and my_crew.blitzium > my_crew.prices.OUTLAW and not self.has_outlaw(
+            my_crew):
             actions.append(BuyAction(UnitType.OUTLAW))
 
         for unit in my_crew.units:
@@ -64,11 +67,10 @@ class Bot:
                                               unit.id,
                                               miner_pos))
                 else:
-
-                        miner_p =self.find_miner_position(my_crew)
-                        actions.append(UnitAction(UnitActionType.MOVE,
-                                                unit.id,
-                                                self.find_empty_positions(miner_p, game_message,base_position)))
+                    miner_p = self.find_miner_position(my_crew)
+                    actions.append(UnitAction(UnitActionType.MOVE,
+                                              unit.id,
+                                              self.find_empty_positions(miner_p, game_message, base_position)))
 
             elif unit.type == UnitType.OUTLAW:
                 next_miner_pos = self.find_next_miner(game_message, my_crew)
@@ -90,9 +92,9 @@ class Bot:
     #     for i in range(1,count)
     #         Unit.find("MINER")
 
-    def find_miner_position(self, my_crew:Crew):
+    def find_miner_position(self, my_crew: Crew):
         for unit in my_crew.units:
-            if unit.type==UnitType.MINER:
+            if unit.type == UnitType.MINER:
                 return unit.position
         return []
 
