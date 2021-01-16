@@ -68,37 +68,50 @@ class Bot:
             carts.append(my_crew.units[1].id)
         elif worth:
             if nminers > ncarts:
-                if my_crew.blitzium > my_crew.prices.CART and ncarts < 3:
+                if my_crew.blitzium > my_crew.prices.CART and ncarts < 4:
                     actions.append(BuyAction(UnitType.CART))
                     ncarts += 1
                     bought_last_round = True
             else:
-                if my_crew.blitzium > my_crew.prices.MINER and nminers < 3:
+                if my_crew.blitzium > my_crew.prices.MINER and nminers < 4:
                     actions.append(BuyAction(UnitType.MINER))
                     nminers += 1
                     bought_last_round = True
 
-        if len(my_crew.units) < (noutlaws + nminers + ncarts):
+        if game_message.tick > 5 and len(my_crew.units) < (noutlaws + nminers + ncarts) and not bought_last_round:
             if worth:
+                found = False
                 for i, id in enumerate(miners):
                     for unit in my_crew.units:
                         if unit.id == id:
-                            #miner got killed
-                            miners[i] = "rip"
-                            if(my_crew.blitzium > my_crew.prices.MINER):
-                                bought_last_round = True
-                                miner_died = True
-                                actions.append(BuyAction(UnitType.MINER))
+                            #this is not the dead unit
+                            found = True
+                    if found:
+                        found = False
+                        continue
+                    else:
+                        #this is the dead unit
+                        miners[i] = "rip"
+                        if (my_crew.blitzium > my_crew.prices.MINER):
+                            bought_last_round = True
+                            miner_died = True
+                            actions.append(BuyAction(UnitType.MINER))
                 if not miner_died:
                     for i, id in enumerate(carts):
                         for unit in my_crew.units:
                             if unit.id == id:
-                                #cart got killed
-                                carts[i] = "rip"
-                                if(my_crew.blitzium > my_crew.prices.CART):
-                                    bought_last_round = True
-                                    cart_died = True
-                                    actions.append(BuyAction(UnitType.CART))
+                                # this is not the dead unit
+                                found = True
+                        if found:
+                            found = False
+                            continue
+                        else:
+                            # this is the dead unit
+                            carts[i] = "rip"
+                            if (my_crew.blitzium > my_crew.prices.CART):
+                                bought_last_round = True
+                                cart_died = True
+                                actions.append(BuyAction(UnitType.CART))
 
         # depot_position: Position = game_message.map.depots[0].position
         # if not self.are_we_first_place(game_message, my_crew):
@@ -125,8 +138,13 @@ class Bot:
             elif unit.type == UnitType.CART:
                 miner_pos = self.cart_is_next_to_miner(unit.position)
                 if miner_died:
-                    if not miners[carts.index(unit.id)] == "rip":
-                        continue
+                    if miners[carts.index(unit.id)] == "rip":
+                        if game_message.map.depots:
+                            actions.append(UnitAction(UnitActionType.MOVE,
+                                                  unit.id,
+                                                  game_message.map.depots[0]))
+                        else:
+                            continue
                 elif unit.blitzium != 0:
                     if self.next_to_home(unit.position, base_position):
                         actions.append(UnitAction(UnitActionType.DROP,
@@ -143,8 +161,6 @@ class Bot:
                                                       unit.id,
                                                       self.find_empty_positions(base_position, game_message,
                                                                                 base_position)))
-
-
                 elif miner_pos and self.check_if_miner_has_blitz(my_crew):
                     buddy: Unit
                     for temp in my_crew.units:
