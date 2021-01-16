@@ -175,11 +175,15 @@ class Bot:
         return closest_mine
 
     def find_next_miner(self, game_message: GameMessage, my_crew: Crew):
+        highest_miner_position = None
+        highest_miner_blitzium = 0
         for crew in game_message.crews:
-            if crew.id != my_crew.id and crew.blitzium > my_crew.blitzium:
+            if crew.id != my_crew.id and crew.blitzium > highest_miner_blitzium:
                 for unit in crew.units:
                     if unit.type == UnitType.MINER:
-                        return unit.position
+                        highest_miner_position = unit.position
+                        highest_miner_blitzium = crew.blitzium
+        return highest_miner_position
 
     def are_we_first_place(self, game_message: GameMessage, my_crew: Crew):
         id_of_current_winner = None
