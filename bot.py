@@ -126,11 +126,11 @@ class Bot:
             if my_crew.blitzium > my_crew.prices.CART and not bought_last_round:
                 actions.append(BuyAction(UnitType.CART))
                 extra_cart = True
-        elif 4 <= len(game_message.map.depots) < 6:
+        elif 5 <= len(game_message.map.depots) < 7:
             if my_crew.blitzium > my_crew.prices.CART and not bought_last_round:
                 actions.append(BuyAction(UnitType.CART))
                 extra_cart = True
-        elif len(game_message.map.depots) >= 6:
+        elif len(game_message.map.depots) >= 7:
             if my_crew.blitzium > my_crew.prices.CART and not bought_last_round:
                 actions.append(BuyAction(UnitType.CART))
                 extra_cart = True
